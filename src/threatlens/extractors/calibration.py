@@ -38,6 +38,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from threatlens import __version__
 from threatlens.config import (
     ConfigError,
     LLMSettings,
@@ -710,6 +711,7 @@ def calibrate(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Benchmark Ollama and save ThreatLens LLM settings to threatlens.conf.")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("--model", default=None, help="Model to benchmark (default: threatlens.conf [models] verifier)")
     parser.add_argument(
         "--ollama-url",

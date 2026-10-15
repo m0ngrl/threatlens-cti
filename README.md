@@ -20,7 +20,9 @@ ZEIT3118 Capstone, UNSW Canberra, 2026.
 
 The package is `threatlens-cti`. It installs the `threatlens` Python package
 and the `threatlens`, `threatlens-init`, `threatlens-ingest`,
-`threatlens-calibrate` and `threatlens-dashboard` commands. Leave out
+`threatlens-calibrate` and `threatlens-dashboard` commands; each takes
+`--version`. This is a beta (0.x): behaviour may still change between minor
+versions. Leave out
 `[dashboard]` if you only need the command line (no FastAPI, Uvicorn or
 Datasette).
 
@@ -111,7 +113,7 @@ by Artifex), which is why ThreatLens uses the AGPL.
 Source: [github.com/m0ngrl/threatlens-cti](https://github.com/m0ngrl/threatlens-cti).
 From a checkout:
 
-    python -m venv .venv
+    python3 -m venv .venv                # Windows: py -m venv .venv
     source .venv/bin/activate            # Windows: .venv\Scripts\activate
     python -m pip install -e ".[dev,dashboard]"
     threatlens init                      # writes threatlens.conf in the repo root

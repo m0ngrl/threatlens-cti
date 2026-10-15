@@ -41,8 +41,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 
+from threatlens import __version__, paths
 from threatlens import config as conf
-from threatlens import paths
 
 Ask = Callable[[str], str]
 Out = Callable[[str], None]
@@ -403,6 +403,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="threatlens init",
         description="Set up threatlens.conf by answering questions, then create the database.",
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(
         "--non-interactive",
         action="store_true",

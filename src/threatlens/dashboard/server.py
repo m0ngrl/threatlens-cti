@@ -26,6 +26,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from threatlens import __version__
 from threatlens.dashboard.routes import (
     config,
     db_admin,
@@ -144,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     from threatlens.setup_wizard import offer_setup
 
     parser = argparse.ArgumentParser(description="Run the ThreatLens dashboard.")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(
         "--host",
         default=None,

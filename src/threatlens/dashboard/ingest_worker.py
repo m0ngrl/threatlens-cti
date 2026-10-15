@@ -37,6 +37,8 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+from threatlens import __version__
+
 PROGRESS_PREFIX = "@@progress "
 RESULT_PREFIX = "@@result "
 
@@ -168,6 +170,7 @@ def run(pdf: Path, db_path: Path, engine: str, verbose: int) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Ingest one CTI report into a ThreatLens database.")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("source", type=Path)
     parser.add_argument("--db", type=Path, required=True, help="SQLite database file to write to")
     parser.add_argument("--engine", choices=("llm", "python"), default="llm")
@@ -193,9 +196,11 @@ def cli_main(argv: list[str] | None = None) -> int:
     """threatlens-ingest entry point: the dashboard's ingest pipeline, run from a terminal."""
     global MACHINE_OUTPUT
     MACHINE_OUTPUT = False
-    from threatlens.setup_wizard import offer_setup
+    args = sys.argv[1:] if argv is None else argv
+    if not {"-h", "--help", "--version"} & set(args):  # don't prompt just to show help
+        from threatlens.setup_wizard import offer_setup
 
-    offer_setup()
+        offer_setup()
     return main(argv)
 
 

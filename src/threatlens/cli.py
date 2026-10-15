@@ -48,6 +48,7 @@ import json
 import sys
 from pathlib import Path
 
+from threatlens import __version__
 from threatlens.config import ConfigError, LLMSettings, load_config, setup_status
 from threatlens.extractors.ioc_extract_llm_fs import ExtractorConfig, OllamaError
 from threatlens.extractors.ioc_extract_llm_fs import (
@@ -64,6 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Extract and verify IoCs/metadata from a CTI report.",
         epilog="First time? Run `threatlens init` to set up threatlens.conf.",
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(
         "source",
         type=Path,

@@ -78,6 +78,7 @@ def test_first_run_writes_conf_and_creates_database(env: Path) -> None:
     assert (config.dashboard_host, config.dashboard_port) == ("127.0.0.1", 8000)
     assert config.data_dir == ""
 
+    assert (env / "data" / "reports").is_dir()  # ready for PDFs before the dashboard runs
     db_path = env / "data" / "db" / "threatlens.db"
     with sqlite3.connect(db_path) as db:
         assert db.execute("SELECT count(*) FROM scoring_config").fetchone()[0] == 4

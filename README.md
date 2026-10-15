@@ -55,7 +55,8 @@ the dashboard's Configuration page and `threatlens-calibrate` also write it:
 | Databases | `~/.local/share/threatlens/db/` | `db/` |
 | Report PDFs | `~/.local/share/threatlens/reports/` | `docs/database/CTI/` |
 
-Windows uses `%APPDATA%\threatlens` and `%LOCALAPPDATA%\threatlens`; macOS
+On Windows, config and data share `%LOCALAPPDATA%\threatlens` (e.g.
+`C:\Users\you\AppData\Local\threatlens`); on macOS,
 `~/Library/Application Support/threatlens`. `THREATLENS_CONF` moves the
 config file; `THREATLENS_HOME` or `[paths] data_dir` in `threatlens.conf`
 moves the data folder (`db/` and `reports/`).

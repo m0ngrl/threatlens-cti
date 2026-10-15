@@ -435,9 +435,11 @@ threatlens init --non-interactive --data-dir /srv/threatlens --host 0.0.0.0 --po
       <tr><td>Report PDFs (uploads, downloads, ingest)</td><td><code>docs/database/CTI/</code></td><td><code>~/.local/share/threatlens/reports/</code></td></tr>
     </tbody>
   </table>
-  <p>On Windows the folders are <code>%APPDATA%\threatlens</code> (config) and
-  <code>%LOCALAPPDATA%\threatlens</code> (data); on macOS both are
-  <code>~/Library/Application Support/threatlens</code>. Overrides, highest
+  <p>On Windows, config and data share one folder,
+  <code>%LOCALAPPDATA%\threatlens</code> (e.g.
+  <code>C:\Users\you\AppData\Local\threatlens</code>, holding
+  <code>threatlens.conf</code>, <code>db\</code> and <code>reports\</code>); on
+  macOS both are <code>~/Library/Application Support/threatlens</code>. Overrides, highest
   first: <code>THREATLENS_CONF</code> for the config file;
   <code>THREATLENS_HOME</code>, then <code>[paths] data_dir</code> in
   <code>threatlens.conf</code>, for the data folder (which then holds

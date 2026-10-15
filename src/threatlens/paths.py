@@ -16,8 +16,9 @@ Two layouts, picked automatically:
                    config    <user config dir>/threatlens.conf
                    data      <user data dir>/  holding db/ and reports/
                e.g. Linux ~/.config/threatlens and ~/.local/share/threatlens;
-               Windows %APPDATA%\\threatlens and %LOCALAPPDATA%\\threatlens;
-               macOS ~/Library/Application Support/threatlens for both.
+               Windows %LOCALAPPDATA%\\threatlens and macOS
+               ~/Library/Application Support/threatlens, for both (platformdirs
+               puts the config beside the data there when roaming is off).
 
 Overrides, highest first:
 

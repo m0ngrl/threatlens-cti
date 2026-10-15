@@ -342,6 +342,12 @@ class Wizard:
         conf.save_config(plan.config, path)
         self.out(f"Wrote {path}")
 
+        # Created now, so PDFs can be copied straight in before the dashboard
+        # (which would otherwise create it on first upload) has ever run.
+        reports = paths.reports_dir()
+        reports.mkdir(parents=True, exist_ok=True)
+        self.out(f"Report folder: {reports}  (copy PDFs here, or upload them in the dashboard)")
+
         if plan.create_database:
             self.create_database(paths.db_dir() / plan.config.database)
         if plan.calibrate:

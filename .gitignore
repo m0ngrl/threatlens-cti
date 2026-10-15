@@ -30,8 +30,8 @@ threatlens.conf
 # Local data, never committed: report PDFs (third-party, the dashboard's
 # upload folder), database backups, run outputs and logs.
 docs/database/CTI/
-db/
-results/
+/db/
+/results/
 *.log
 .gui_*
 

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ThreatLens - Report</title>
+<link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+<header class="app-header">
+  <a class="back-link" href="/">&larr; Back to dashboard</a>
+</header>
+
+<main>
+  <div class="report-header">
+    <div>
+      <h1 id="report-title">Loading...</h1>
+      <div class="filename" id="report-filename"></div>
+      <div class="meta" id="report-meta"></div>
+    </div>
+    <div class="report-score-hero" id="report-score-hero"></div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Type</th><th>Value</th>
+        <th>Timel.</th><th>Acc.</th><th>Compl.</th><th>Relev.</th>
+        <th>Score</th><th>Confidence</th><th>Flags</th>
+        <th title="Times the value was found in the report PDF - click a row to jump to it">In PDF</th>
+      </tr>
+    </thead>
+    <tbody id="report-indicators-body"></tbody>
+  </table>
+
+  <section class="report-pdf" id="report-pdf">
+    <div class="report-pdf-toolbar">
+      <h2>Report document</h2>
+      <span class="report-pdf-status" id="report-pdf-status"></span>
+      <a class="header-link" id="report-pdf-open" target="_blank" rel="noopener" hidden>Open original PDF &nearr;</a>
+    </div>
+    <div class="pdf-nav" id="pdf-nav" hidden>
+      <div class="pdf-nav-group">
+        <button class="secondary" id="pdf-first" title="First page (Home)">&laquo;</button>
+        <button class="secondary" id="pdf-prev" title="Previous page (&larr;)">&lsaquo; Prev</button>
+        <label class="pdf-page-input">
+          Page <input type="number" id="pdf-page-number" min="1" value="1" /> of <span id="pdf-page-count"></span>
+        </label>
+        <button class="secondary" id="pdf-next" title="Next page (&rarr;)">Next &rsaquo;</button>
+        <button class="secondary" id="pdf-last" title="Last page (End)">&raquo;</button>
+      </div>
+      <div class="pdf-nav-group">
+        <button class="secondary" id="pdf-prev-hit" title="Previous page with highlighted indicators">&lsaquo; Hits</button>
+        <span class="pdf-page-hits" id="pdf-page-hits"></span>
+        <button class="secondary" id="pdf-next-hit" title="Next page with highlighted indicators">Hits &rsaquo;</button>
+      </div>
+      <div class="pdf-nav-group pdf-fit" role="group" aria-label="Fit">
+        <button class="secondary" data-fit="page" title="Fit the whole page in the window">Fit page</button>
+        <button class="secondary" data-fit="width" title="Fit the page width; scroll for the rest">Fit width</button>
+      </div>
+    </div>
+    <div class="pdf-viewport" id="pdf-viewport" tabindex="0" hidden>
+      <div class="pdf-page" id="pdf-page"></div>
+    </div>
+  </section>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/report_detail.js"></script>
+</body>
+</html>

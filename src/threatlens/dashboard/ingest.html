@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ThreatLens - Ingest</title>
+<link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+<header class="app-header">
+  <a class="back-link" href="/">&larr; Back to dashboard</a>
+</header>
+
+<main>
+  <h1 class="uploads-title">Ingest Reports</h1>
+  <p class="uploads-intro">
+    Run report files from <code>docs/database/CTI</code> through extraction, quality checks and
+    scoring, into the <strong id="ingest-db">active</strong> database. Reports are processed one at a
+    time; a report is only written to the database once it has been fully processed, so cancelling
+    a run leaves nothing half-ingested. New files can be added on the
+    <a class="value-link" href="/uploads">Report Files</a> page.
+  </p>
+
+  <section class="detail-card">
+    <h2>Engine</h2>
+    <div class="engine-options">
+      <label class="engine-option">
+        <input type="radio" name="engine" value="llm" checked />
+        <span class="engine-body">
+          <span class="engine-name">LLM enhanced <span id="llm-status" class="status-chip">checking...</span></span>
+          <span class="engine-desc">Regex candidates verified by a local Ollama model, plus document scope
+            classification. Most accurate; minutes per report. <span id="llm-model"></span></span>
+        </span>
+      </label>
+      <label class="engine-option">
+        <input type="radio" name="engine" value="python" />
+        <span class="engine-body">
+          <span class="engine-name">Python only</span>
+          <span class="engine-desc">Same extraction, verified with local heuristics only. No LLM needed;
+            seconds per report.</span>
+        </span>
+      </label>
+    </div>
+    <div class="ingest-setting">
+      <label for="ingest-verbose">Log detail</label>
+      <select id="ingest-verbose">
+        <option value="1">Normal: stages and batches</option>
+        <option value="2" selected>Verbose: every candidate (recommended)</option>
+        <option value="3">Debug: verifier reasoning and LLM exchanges</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="detail-card">
+    <div class="card-heading">
+      <h2>Download from URL</h2>
+      <div class="card-actions">
+        <button id="url-clear" class="secondary" type="button">Clear finished</button>
+      </div>
+    </div>
+    <p class="detail-note">
+      Fetch a report PDF from the web into <code>docs/database/CTI</code>, then queue it for ingest
+      with the engine and log detail above. The file must be a PDF; links to web pages are refused.
+      Only public http(s) addresses on the standard ports are allowed - local and private network
+      addresses are blocked, including via redirects.
+    </p>
+    <form id="url-form" class="url-form">
+      <input id="url-input" type="url" placeholder="https://example.com/report.pdf" pattern="https?://.+" maxlength="4096" required />
+      <button id="url-submit" type="submit">Download &amp; ingest</button>
+    </form>
+    <div id="url-list" class="queue-list"></div>
+  </section>
+
+  <section class="detail-card">
+    <div class="card-heading">
+      <h2>Not yet ingested <span id="pending-count" class="uploads-summary"></span></h2>
+      <div class="card-actions">
+        <button id="pending-refresh" class="secondary" type="button">Rescan folder</button>
+        <button id="pending-queue-selected" type="button" disabled>Add selected to queue</button>
+        <button id="pending-queue-all" type="button" disabled>Queue all</button>
+      </div>
+    </div>
+    <table class="data-table compact">
+      <thead>
+        <tr>
+          <th class="check-col"><input id="pending-select-all" type="checkbox" title="Select all" /></th>
+          <th>Filename</th>
+          <th>Size</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="pending-body"></tbody>
+    </table>
+  </section>
+
+  <section class="detail-card">
+    <div class="card-heading">
+      <h2>Queue <span id="queue-summary" class="uploads-summary"></span></h2>
+      <div class="card-actions">
+        <label class="upload-overwrite"><input id="queue-follow" type="checkbox" checked /> Follow running log</label>
+        <button id="queue-clear" class="secondary" type="button">Clear finished</button>
+        <button id="queue-cancel-all" class="danger" type="button">Cancel all</button>
+      </div>
+    </div>
+    <div class="progress-track overall"><div id="queue-overall-bar" class="progress-fill"></div></div>
+    <div id="queue-list" class="queue-list"></div>
+  </section>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/ingest.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Extra files for the source distribution (sdist). The wheel's contents are
+# set by [tool.setuptools.package-data] in pyproject.toml.
+include README.md
+include requirements.txt
+include threatlens.conf.example
+include alembic.ini
+graft tests
+prune tests/output
+global-exclude __pycache__ *.py[cod] server.log .server.pid

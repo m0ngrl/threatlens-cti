@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality Checker — ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+    --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 24px;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.2em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  tr:nth-child(even) { background: #fbfcfd; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 1.5em;
+  }
+  .stub-notice {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    background: var(--code-bg);
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: 1.5em 0 2em;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+    tr:nth-child(even) { background: #10151c; }
+  }
+  h3 { font-size: 1.05rem; margin-top: 1.8em; }
+  @media (max-width: 600px) { .wrap { padding: 32px 16px 64px; } }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a href="extraction-engine.html">Extraction Engine</a>
+    <a href="database-schema.html">Database &amp; Schema</a>
+    <a href="quality-checker.html" aria-current="page">Quality Checker</a>
+    <a href="dashboard-webui.html">Dashboard / Web UI</a>
+    <a href="cli_rundown.html">CLI</a>
+    <a href="evaluation-reports.html">Evaluation Reports</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<span class="badge">ThreatLens · ZEIT3118 Capstone</span>
+<h1>Quality Checker</h1>
+
+<p>The quality checker (<code>src/threatlens/quality/quality_checker.py</code>)
+takes the extraction engine's output for one report and decides what each
+candidate is, and how good it is as data. It answers the three quality
+problems named in the client's brief:</p>
+<ol>
+  <li><strong>Duplication</strong>: the same observable extracted more than
+  once, or one value nested inside another.</li>
+  <li><strong>Missing context</strong>: indicators with little supporting
+  information about who, what or which campaign.</li>
+  <li><strong>False positives</strong>: values shaped like IoCs that are not
+  malicious, such as public resolvers, the publisher's own URL, or technique
+  names.</li>
+</ol>
+<p>Whatever survives is scored against the quality framework from the
+project's research paper (Table 7), giving each stored indicator a
+<code>quality_score</code> from 0 to 100 and a verbal grade.</p>
+
+<p>The checker comes after extraction. It reads what the extraction engine
+produced and never goes back to the report or calls the LLM. Its core,
+<code>check_report()</code>, is pure: no database, no network, no file
+access. Writing to the database is a separate adapter,
+<code>persist_report()</code>, so the same checks run with or without a
+database.</p>
+
+<h2 id="invocation">How it is invoked</h2>
+
+<p>Nothing runs the quality checker on its own schedule. It is called in
+three ways, and only the first one writes to the database:</p>
+
+<table>
+<thead><tr><th>Route</th><th>Who calls it</th><th>Input</th><th>Output</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Ingest pipeline</strong></td>
+  <td><code>dashboard/ingest_worker.py</code>, which sits behind the
+  dashboard's Ingest page, the <code>threatlens-ingest</code> command and
+  <code>.dev_tools/run_ex_pipeline.py</code></td>
+  <td>The <code>IoCExtractionResult</code>, in memory</td>
+  <td><strong>The SQLite database</strong>, committed</td>
+</tr>
+<tr>
+  <td><strong>Standalone CLI</strong></td>
+  <td><code>python -m threatlens.quality.quality_checker</code>, by hand</td>
+  <td>One or two extractor JSON files, written by <code>threatlens -o</code></td>
+  <td>A console summary, plus <strong>a JSON report</strong> with
+  <code>-o</code>. No database.</td>
+</tr>
+<tr>
+  <td><strong>Library</strong></td>
+  <td>Any Python code, e.g. tests</td>
+  <td>Either of the above</td>
+  <td>A <code>QualityReport</code> object; the caller decides whether to
+  persist it</td>
+</tr>
+</tbody>
+</table>
+
+<p>The dashboard also uses parts of the module after ingest:
+<code>rescore_from_db()</code> runs from the Configuration page's rescore
+action (<code>POST /api/config/rescore</code>). The indicator detail page
+uses <code>ScoringPolicy</code>, <code>maliciousness_from_verdict()</code>
+and <code>SCREENED_FLAGS</code> to explain a stored score.</p>
+
+<h3>Route 1: the ingest pipeline (to the database)</h3>
+<p>This is the main use. For each report, <code>ingest_worker.run()</code>
+does:</p>
+<pre><code>analyse_document(pdf)                         extraction engine (llm or python)
+      │  IoCExtractionResult (in memory)
+      ▼
+run_from_payload(result, source=pdf)          calls result.to_dict(); no file written
+      │  ExtractionRun
+      ▼
+check_report([run], policy=ScoringPolicy.from_session(session))
+      │  QualityReport
+      ▼
+persist_report(session, report,               sources, raw_documents, indicators,
+               source_name=pdf.name,          sightings, quality_flags
+               file_path=&lt;data-folder-relative pdf&gt;)
+session.commit()
+      │
+      ▼
+rescore_from_db(session)                      timeliness + accuracy refreshed for
+session.commit()                              every stored indicator</code></pre>
+<p>The persist step and the rescore step are committed separately. If
+anything fails, the session is rolled back and the worker exits with code
+1. The extraction result is never written to disk on this route. Only one
+engine runs per ingest, so <code>check_report</code> always gets a single
+run, and every candidate's agreement grade is
+<code>single_verifier</code>.</p>
+<p>How to start an ingest is covered on the
+<a href="dashboard-webui.html">Dashboard</a> and <a href="cli_rundown.html">CLI</a>
+pages. From a terminal:</p>
+<pre><code>threatlens-ingest report.pdf --db db/threatlens.db --engine llm</code></pre>
+<p>Before extracting, the worker runs the
+<a href="cli_rundown.html#setup-check">setup check</a> and logs a
+<code>[WARN]</code> line if <code>threatlens.conf</code> is missing, invalid
+or still the unedited template, with either engine, since the weights it
+scores with come from that file. With the llm engine it also warns if the
+<code>[llm]</code> settings were never calibrated. The ingest still runs.</p>
+
+<h3>Route 2: the standalone CLI (to the console and JSON)</h3>
+<p>The module has its own command line for inspecting the quality stage
+without touching a database. It reads the JSON that the
+<code>threatlens</code> command writes with <code>-o</code>, so the two
+commands chain:</p>
+<pre><code>threatlens report.pdf -o llm.json
+threatlens report.pdf --engine python -o python.json
+
+python -m threatlens.quality.quality_checker llm.json
+python -m threatlens.quality.quality_checker llm.json --compare python.json --show all
+python -m threatlens.quality.quality_checker llm.json -o quality.json</code></pre>
+
+<table>
+<thead><tr><th>Argument</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>extraction</code></td><td>Extractor JSON to assess (required)</td></tr>
+<tr><td><code>--compare FILE</code></td><td>The other engine's JSON for the same report. Turns on cross-verifier
+agreement grading; without it every candidate is <code>single_verifier</code>.
+This is the only place in the project where the two engines' verdicts are
+compared.</td></tr>
+<tr><td><code>-o, --output FILE</code></td><td>Write the full quality report as JSON (parent directories are created)</td></tr>
+<tr><td><code>--show</code></td><td><code>summary</code> (default), <code>indicators</code>,
+<code>screened</code>, <code>rejected</code> or <code>all</code>: how much
+per-candidate detail to print</td></tr>
+</tbody>
+</table>
+<p>It exits with 0 on success, or 1 with <code>error: …</code> on stderr when
+an input cannot be read or parsed, or a value fails conformance. The help text
+calls the program <code>threatlens-quality</code>, but no such command is
+installed (it is not in <code>pyproject.toml</code>); use
+<code>python -m</code> as shown. With no database, the CLI takes its scoring
+settings from the built-in defaults plus <code>threatlens.conf</code> (see
+<a href="#settings">Settings</a>).</p>
+<p>Example console output (python engine, one of the test fixtures):</p>
+<pre><code>report:    SnappyClient – Malware Trends Tracker by ANY.RUN (2026-07-22)
+verifiers: python
+verdict:   10 indicators, 1 screened, 0 context entities, 6 rejected (from 17 candidates)
+quality:   mean score 16.0/100 (Unreliable)
+agreement: single_verifier=17
+issues:
+               4  sentence_fragment
+               2  self_reference
+               1  invalid_format
+               1  span_overlap
+note:      no extractor field supplies ['threat_actor', 'campaign', 'vulnerability', 'tool'], so completeness is capped for every indicator</code></pre>
+
+<h3>Route 3: as a library</h3>
+<pre><code>from threatlens.extractors.ioc_extract_llm_fs import analyse_document
+from threatlens.quality.quality_checker import (
+    check_report, load_run, persist_report, rescore_from_db, run_from_payload,
+)
+
+# In memory, as the ingest pipeline does
+report = check_report([run_from_payload(analyse_document("report.pdf"))])
+
+# Or from JSON files, as the CLI does
+report = check_report([load_run("llm.json"), load_run("python.json")])
+
+print(report.summary())        # counts, mean score, grade, agreement, issues
+data = report.to_dict()        # what the CLI's -o writes
+
+# Only if a database is wanted (the caller commits)
+persist_report(session, report, source_name="report.pdf", file_path="reports/report.pdf")
+session.commit()
+rescore_from_db(session)
+session.commit()</code></pre>
+
+<h2 id="input">Data in</h2>
+
+<p>Everything the checker reads is normalised into an
+<code>ExtractionRun</code>: the report's <code>metadata</code>, the
+<code>verification_model</code>, the extractor's <code>summary</code>, and a
+tuple of <code>Candidate</code>s. There are two ways to build one, and both
+go through the same parser, so they cannot drift apart:</p>
+<ul>
+  <li><code>run_from_payload(payload, source=…)</code> takes data already in
+  memory. It accepts any object with a <code>to_dict()</code> method (this is
+  how an <code>IoCExtractionResult</code> is passed straight in), the
+  current mapping shape, or the two older shapes the archived extractors
+  produced (a flat list of records, or records grouped by category). The
+  extractor is duck-typed rather than imported, so the checker does not
+  depend on engine code.</li>
+  <li><code>load_run(path)</code> reads a JSON file and hands it to
+  <code>run_from_payload</code>. A missing or invalid file raises
+  <code>ValueError</code>.</li>
+</ul>
+
+<p>Fields the checker uses from the extractor's output:</p>
+<table>
+<thead><tr><th>Field</th><th>Used for</th></tr></thead>
+<tbody>
+<tr><td><code>verification_model</code></td><td>Which verifier produced the run. <code>python-heuristics</code> means the python engine; anything else is treated as the LLM.</td></tr>
+<tr><td><code>metadata.publish_date</code></td><td>Timeliness, and the indicator's <code>first_seen</code> / <code>last_seen</code></td></tr>
+<tr><td><code>metadata.source_url</code>, <code>title</code>, <code>filename</code></td><td>The self-reference check; the source's name and URL in the database</td></tr>
+<tr><td><code>metadata.file_sha256</code></td><td>The document's identity in the database</td></tr>
+<tr><td><code>indicators[]</code>: id, category, type, value, normalised value, offsets, context excerpt</td><td>The candidates assessed by all four layers</td></tr>
+<tr><td><code>indicators[].verification</code>: status, confidence, reason</td><td>The verdict used in reconciliation, translated into <code>indicators.confidence</code></td></tr>
+</tbody>
+</table>
+<p>When two runs are given (CLI <code>--compare</code>), candidates are
+matched by candidate id. That works because both engines share the same
+candidate stage and produce identical ids for the same report (see
+<a href="extraction-engine.html">Extraction Engine</a>). The checker assesses
+the union of both runs' candidates. The extractor's <code>scope</code> and
+<code>summary</code> are not used.</p>
+
+<h3 id="settings">Settings</h3>
+<p>Weights and bands come from a <code>ScoringPolicy</code>, resolved in
+this order. Each later source overrides the earlier ones:</p>
+<ol>
+  <li><code>ScoringPolicy.default()</code>, built into the module. It
+  mirrors the <code>scoring_config</code> rows that <code>seed.py</code>
+  writes.</li>
+  <li>The database's <code>scoring_config</code> table: the latest row per
+  dimension, read by <code>ScoringPolicy.from_session()</code>. Only the
+  ingest pipeline (and <code>rescore_from_db</code>) has a session, so the
+  standalone CLI skips this step.</li>
+  <li><code>threatlens.conf</code> (<a href="cli_rundown.html#locations">located</a>
+  by <code>paths.config_file()</code>): <code>[quality.weights]</code> and
+  <code>[quality.agreement]</code>, when present. The dashboard's
+  Configuration page edits these. Existing indicators keep their old scores
+  until they are rescored. The same file holds the LLM settings
+  (<code>[ollama]</code>, <code>[models]</code>, <code>[llm]</code>), which
+  <code>threatlens-calibrate</code> rewrites without touching these two
+  sections.</li>
+</ol>
+<p>The allowlist used for false-positive screening is <code>seed.py</code>'s
+<code>ALLOWLIST</code>, in every route. <code>check_report()</code> accepts
+<code>allowlist_entries</code>, and <code>allowlist.load_allowlist(session)</code>
+can read the database's <code>allowlist</code> table, but no current caller
+passes it. Edits made to that table do not yet affect ingest.</p>
+
+<h2 id="processing">What it does</h2>
+
+<pre><code>ExtractionRun(s) ─▶ Layer 1 ─▶ Layer 2 ─▶ Layer 3 ─▶ decision ─▶ Layer 4 ─▶ QualityReport
+                    structural  STIX 2.1   false-                 dimension
+                    checks      conformance positive              scoring
+                                            screen</code></pre>
+
+<table>
+<thead><tr><th>Layer</th><th>Question</th><th>Flags it can raise</th></tr></thead>
+<tbody>
+<tr><td><strong>1. Structural checks</strong></td><td>Is this a well-formed observable?</td>
+<td><code>span_overlap</code>, <code>nested_value</code>,
+<code>filename_as_domain</code>, <code>duplicate_observable</code>,
+<code>sentence_fragment</code>, <code>trailing_punctuation</code>,
+<code>length_bounds</code>, <code>truncated_span</code>,
+<code>technique_idiom</code>, <code>self_reference</code></td></tr>
+<tr><td><strong>2. STIX 2.1 conformance</strong></td><td>Is it an SCO (an observable, so a possible indicator), an SDO (context), or neither?</td>
+<td><code>not_stix_conformant</code>, <code>invalid_format</code>,
+<code>unmapped_ioc_type</code></td></tr>
+<tr><td><strong>3. False-positive screen</strong></td><td>Is it well-formed but not malicious?</td>
+<td><code>known_benign</code> (allowlist), <code>non_routable</code> (private, loopback, reserved addresses)</td></tr>
+<tr><td><strong>Decision</strong></td><td>Applying the verifier's verdict</td>
+<td><code>verifier_rejected</code>, <code>benign_observable</code>,
+<code>verifier_uncertain</code></td></tr>
+<tr><td><strong>4. Dimension scoring</strong></td><td>How good is what is stored?</td><td>(scores, not flags)</td></tr>
+</tbody>
+</table>
+<p>Every flag has a dimension and a severity (<code>FLAG_DIMENSIONS</code>).
+Severity drives the decision: <code>error</code> flags (malformed, non-STIX)
+reject, <code>warning</code> flags (benign) screen, and <code>info</code>
+flags (<code>verifier_uncertain</code>, <code>truncated_span</code>) keep
+the indicator with a caveat.</p>
+
+<h3>Decisions</h3>
+<p>Each candidate gets one <code>Decision</code>, applied in this order:</p>
+<table>
+<thead><tr><th>Decision</th><th>When</th><th>In the database</th></tr></thead>
+<tbody>
+<tr><td><code>REJECTED</code></td><td>Any malformed flag, or no STIX representation</td><td><strong>Nothing.</strong> No indicator, no sighting, no flag. It appears only in the JSON report and console output.</td></tr>
+<tr><td><code>CONTEXT</code></td><td>An SDO: threat actor, malware, campaign, tool, vulnerability and so on</td><td>No row of its own. Its value is merged into <code>indicators.context</code> of every indicator stored from that report.</td></tr>
+<tr><td><code>SCREENED</code></td><td>A screen flag, or the verifier judged it not malicious (<code>verifier_rejected</code>) or a benign observable (<code>benign_observable</code>)</td><td><code>indicators</code> row (with a quality score, <code>confidence = 0</code>), a sighting, and its flags</td></tr>
+<tr><td><code>INDICATOR</code></td><td>Everything else: confirmed, uncertain, or no verdict</td><td><code>indicators</code> row, a sighting, and any flags (e.g. <code>verifier_uncertain</code>)</td></tr>
+</tbody>
+</table>
+<p>Structure comes first: a malformed value is rejected whatever either
+verifier said. Screening keeps the row so that a real observable the report
+mentions (a victim's domain, a legitimate binary the malware abused) stays
+on record and reviewable, without ending up in a malicious-indicator
+feed.</p>
+
+<h3>Verifier reconciliation</h3>
+<p>With two runs, <code>compare_verifiers()</code> grades how far the
+verdicts agree (<code>Agreement</code>: <code>agree</code>,
+<code>weak</code>, <code>moderate</code>, <code>strong</code>), and the LLM
+verdict wins among candidates that survive Layers 1–2. With one run, the
+grade is <code>single_verifier</code>. The grade multiplies the
+verdict-derived confidence (1.00 / 0.90 / 0.75 / 0.50, or 0.85 for a single
+verifier). When the two verdicts agree, their readings are averaged.
+The result becomes <code>indicators.confidence</code>.</p>
+
+<h3>Two scores, two meanings</h3>
+<table>
+<thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>indicators.confidence</code> (0–100)</td><td>How certain it is that the indicator is malicious. Built from the verdict through <code>maliciousness_from_verdict()</code>, because the extractor's own <code>verification.confidence</code> is confidence <em>in the verdict</em> (the python engine rejects at 0.98; the LLM gives 0.0 to every rejection).</td></tr>
+<tr><td><code>indicators.quality_score</code> (0–100)</td><td>How fit the indicator is <em>as data</em>. This module's composite of the dimension scores.</td></tr>
+</tbody>
+</table>
+
+<h3 id="quality-dimensions">The quality dimensions</h3>
+<p>Each stored candidate (<code>INDICATOR</code> or <code>SCREENED</code>)
+is scored 0–5 on four dimensions. The composite is their weighted mean,
+scaled to 0–100, and graded <em>Actionable</em> (≥ 85), <em>Reliable</em>
+(≥ 75), <em>Usable</em> (≥ 65), <em>Marginal</em> (≥ 50) or
+<em>Unreliable</em>.</p>
+<table>
+<thead><tr><th>Dimension</th><th>Measures</th><th>Default weight</th></tr></thead>
+<tbody>
+<tr><td>Timeliness</td><td>Age of the report's <code>publish_date</code> (under 7 days scores 5, under 30 days 4, under 90 days 3, under 365 days 2, older 1, unknown 0)</td><td>0.25</td></tr>
+<tr><td>Accuracy</td><td>Source reliability: the percentage of the report's candidates that were not rejected (≥ 90% scores 5, ≥ 80% 4, ≥ 70% 3, ≥ 55% 2). A report with fewer than 10 candidates is capped at 3.</td><td>0.30</td></tr>
+<tr><td>Completeness</td><td>The share of the expected context keys (<code>threat_actor</code>, <code>campaign</code>, <code>vulnerability</code>, <code>tool</code>) filled from the report's context entities</td><td>0.25</td></tr>
+<tr><td>Relevance</td><td>How well the report's audience (tactical vs strategic) matches the reader's role</td><td>0.20</td></tr>
+</tbody>
+</table>
+<p>Notes on the current behaviour:</p>
+<ul>
+  <li><strong>Accuracy is not corroboration.</strong> Measured over 105
+  reports, only 3.3% of observables appeared in more than one report, and
+  those were mostly benign (LOLBins, generic paths, publisher domains).
+  Accuracy therefore reads the source's reliability, which is stored on
+  <code>sources.reliability</code>. Sighting counts are still recorded in
+  <code>score_components</code> for when an external feed is added. This
+  partly measures the extraction as well as the source.</li>
+  <li><strong>Relevance is always 3 today.</strong> Every caller scores for
+  <code>ViewerRole.ANY</code>, which returns the middle band. The report's
+  audience profile is computed and shown in the JSON summary, but it is not
+  stored, and the dashboard does not yet rescore per reader.</li>
+  <li><strong>Consistency is not scored.</strong> The paper's fifth
+  dimension (antivirus detection rate) needs enrichment APIs, which are out
+  of scope. Consistency-type flags are still recorded, and agreement still
+  affects <code>confidence</code>. It can be added once a feed such as MISP
+  or VirusTotal supplies data.</li>
+  <li><strong>Completeness</strong> measures context fields filled rather
+  than the paper's percentage of the STIX graph, because ThreatLens does not
+  build that graph. Keys no extractor field can supply are listed as
+  <code>unpopulatable_context_keys</code>.</li>
+  <li>The weights in <code>threatlens.conf</code> override the defaults
+  above. Check that file before reading a score.</li>
+</ul>
+
+<h2 id="output">Data out</h2>
+
+<p>Every route first produces a <code>QualityReport</code>: the report's
+metadata, <code>scored_at</code>, the document context, the policy used,
+and one <code>CandidateAssessment</code> per candidate (decision, STIX kind,
+issues, dimension scores, quality score, grade, confidence, agreement).
+Where it goes next depends on the route. Nothing is passed back to the
+extraction engine.</p>
+
+<h3>To the database: <code>persist_report()</code></h3>
+<p>Used by the ingest pipeline. <code>report.scored_rows()</code> builds an
+<code>indicators</code> row for each stored assessment and validates it
+against the schema (<code>conformance.validate_indicator_row</code>), so a
+bad value fails with the column named. <code>db.ingest.ingest_scored_rows()</code>
+then writes those rows unchanged, and <code>raise_flags()</code> records
+the issues. The caller commits.</p>
+<table>
+<thead><tr><th>Table</th><th>What is written</th></tr></thead>
+<tbody>
+<tr><td><code>raw_documents</code></td><td>The report, keyed by <code>metadata.file_sha256</code>. The same file ingested again reuses its existing source.</td></tr>
+<tr><td><code>sources</code></td><td>Name, URL, metadata plus <code>candidate_count</code>, <code>reliability</code> (= source reliability %), <code>extraction_engine</code> (<code>llm</code>, <code>python</code>, or <code>llm+python</code> after re-ingesting with the other engine) and <code>verification_model</code></td></tr>
+<tr><td><code>indicators</code></td><td>One row per unique <code>(ioc_type, normalised)</code>: <code>confidence</code>, <code>quality_score</code>, <code>score_components</code> (dimensions, weights, grade, agreement, STIX kind), <code>context</code> (the document context merged with the extractor's excerpt), <code>scored_at</code>, and <code>first_seen</code> / <code>last_seen</code>: the earliest and latest publish dates of the reports that sighted it (never the ingest time). If the indicator already exists, its score, components and <code>scored_at</code> are updated and its dates re-derived; its confidence is left unchanged, and its context only fills in if it was empty.</td></tr>
+<tr><td><code>sightings</code></td><td>One per (indicator, source), with the excerpt and its offsets</td></tr>
+<tr><td><code>quality_flags</code></td><td>One per issue on a stored indicator: <code>flag_type</code>, <code>dimension</code>, <code>severity</code>, <code>detail</code>, <code>status = 'open'</code>. A flag type already recorded against that indicator is not added again. Rejected candidates have no indicator, so their flags are not stored.</td></tr>
+</tbody>
+</table>
+<p>After that, <code>rescore_from_db()</code> recalculates timeliness and
+accuracy for <em>every</em> indicator in the database, because timeliness
+changes with the calendar and accuracy depends on the reliability of the
+best source that reported each indicator. Completeness and relevance are
+read back from <code>score_components</code>. It updates
+<code>quality_score</code>, <code>score_components</code> and
+<code>scored_at</code>.</p>
+<p>Not stored: rejected candidates, context entities as rows of their own,
+the audience profile, and the report-level summary. The dashboard reads
+everything else back from these tables.</p>
+
+<h3>To JSON and the console: the standalone CLI</h3>
+<p>The CLI prints the summary shown above. With <code>-o</code> it writes
+<code>report.to_dict()</code>:</p>
+<pre><code>{
+  "metadata":         { …the extractor's metadata… },
+  "scored_at":        "2026-10-13T…Z",
+  "summary": {
+    "candidates", "indicators", "screened", "context_entities", "rejected",
+    "verifiers", "mean_quality_score", "grade", "agreement", "issues",
+    "unpopulatable_context_keys", "source_reliability",
+    "audience_profile", "audience", "role"
+  },
+  "document_context": { "threat_actor": [...], "malware": [...], … },
+  "assessments": [
+    { "candidate_id", "indicator_type", "ioc_type", "value", "normalised",
+      "decision", "stix", "dimensions", "quality_score", "grade",
+      "confidence", "agreement", "issues": [{flag_type, dimension, detail, severity}] }
+  ]
+}</code></pre>
+<p>Unlike the database, the JSON report includes <em>every</em> candidate,
+rejected ones too, each with its flags. That makes it the place to see why
+something was dropped. Nothing reads this file back into the project; it is
+for inspection.</p>
+
+<h2>Extending it</h2>
+<ul>
+  <li><strong>New extractor type</strong>: add it to
+  <code>STIX_OBSERVABLES</code>, <code>STIX_DOMAIN_OBJECTS</code> or
+  <code>STIX_UNMAPPED</code>. An unknown type is rejected as
+  <code>not_stix_conformant</code> rather than passed through.</li>
+  <li><strong>New check</strong>: add its <code>flag_type</code> to
+  <code>FLAG_DIMENSIONS</code> with a dimension and severity, and to
+  <code>MALFORMED_FLAGS</code> or <code>SCREENED_FLAGS</code> if it should
+  reject or screen. Write the check and call it from
+  <code>_structural_issues()</code>.</li>
+  <li><strong>Allowlist entries</strong>: <code>ALLOWLIST</code> in
+  <code>db/seed.py</code> (see the <a href="#settings">allowlist note</a>);
+  the matching logic is in <code>quality/allowlist.py</code>.</li>
+  <li><strong>Weights and bands</strong>: weights in
+  <code>threatlens.conf</code> or the Configuration page; bands as a new
+  <code>scoring_config</code> row (the latest row per dimension wins). Then
+  rescore.</li>
+</ul>
+
+<h2>Source</h2>
+<ul>
+  <li><code>src/threatlens/quality/quality_checker.py</code>: the checker (<code>run_from_payload</code>, <code>load_run</code>, <code>check_report</code>, <code>persist_report</code>, <code>raise_flags</code>, <code>rescore_from_db</code>, CLI)</li>
+  <li><code>src/threatlens/quality/allowlist.py</code>: allowlist matching (Layer 3)</li>
+  <li><code>src/threatlens/dashboard/ingest_worker.py</code>: the ingest pipeline that calls it (<code>threatlens-ingest</code>)</li>
+  <li><code>src/threatlens/db/ingest.py</code>: <code>ingest_scored_rows</code>, the table writes behind <code>persist_report</code></li>
+  <li><code>src/threatlens/db/conformance.py</code>: row validation and the 0–5 → 0–100 conversion</li>
+  <li><code>src/threatlens/db/seed.py</code>: default <code>scoring_config</code> rows and the allowlist</li>
+  <li><code>tests/test_quality_checker.py</code>: tests</li>
+</ul>
+
+</div>
+</body>
+</html>

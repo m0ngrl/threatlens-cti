@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLI — ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #5a5a5a;
+    --border: #e0e0e0;
+    --code-bg: #f5f5f5;
+    --accent: #2f5fd6;
+    --step-bg: #fafafa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --fg: #e8e8e8;
+      --muted: #a0a0a0;
+      --border: #333333;
+      --code-bg: #1e1e1e;
+      --accent: #7fa2ff;
+      --step-bg: #1a1a1a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 1.5rem;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+  .pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 2rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .pipeline span.stage {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--code-bg);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+  }
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+    margin: 0;
+  }
+  ol.steps > li {
+    counter-increment: step;
+    position: relative;
+    background: var(--step-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.1rem 1rem 3.2rem;
+    margin-bottom: 0.9rem;
+  }
+  ol.steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0.9rem;
+    top: 1rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  li h2 {
+    font-size: 1rem;
+    margin: 0 0 0.35rem;
+  }
+  li p {
+    margin: 0.3rem 0;
+    font-size: 0.95rem;
+  }
+  li .ref {
+    display: inline-block;
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  footer {
+    margin-top: 2.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+  h2.section {
+    font-size: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.4rem;
+  }
+  h3 { font-size: 1.02rem; margin-top: 1.6rem; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+    font-size: 0.92rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 7px 11px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  td code { white-space: nowrap; }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--code-bg);
+    padding: 0.7rem 1rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.2em 0;
+    font-size: 0.95rem;
+  }
+  a { color: var(--accent); }
+  @media (max-width: 600px) { main { padding: 1.5rem 16px 3rem; } }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a href="extraction-engine.html">Extraction Engine</a>
+    <a href="database-schema.html">Database &amp; Schema</a>
+    <a href="quality-checker.html">Quality Checker</a>
+    <a href="dashboard-webui.html">Dashboard / Web UI</a>
+    <a href="cli_rundown.html" aria-current="page">CLI</a>
+    <a href="evaluation-reports.html">Evaluation Reports</a>
+  </div>
+</nav>
+
+<main>
+  <h1>CLI: <code>threatlens</code></h1>
+  <p class="subtitle">Inspect what the extraction engine makes of one report, without touching a database. <code>src/threatlens/cli.py</code></p>
+
+  <div class="pipeline">
+    <span class="stage">read</span> →
+    <span class="stage">candidates + metadata</span> →
+    <span class="stage">profile</span> <span>(llm only)</span> →
+    <span class="stage">verify</span> →
+    <span class="stage">summary / JSON</span>
+  </div>
+
+  <h2 class="section">Purpose</h2>
+
+  <p>The <code>threatlens</code> command runs a single CTI report through the
+  extraction engine and shows the result. It prints a short summary to the
+  terminal and, with <code>-o</code>, writes the full result as JSON. The JSON
+  holds every regex candidate with its offsets and context excerpt, the
+  verifier's verdict, reason and evidence quote for it, the document metadata
+  and, with the LLM engine, the report's scope assessment.</p>
+
+  <p>It exists to make the extraction stage visible on its own: to see why a
+  value was confirmed or rejected, to compare the two verification engines on
+  the same report, or to check a change to the extractor before ingesting
+  anything. The JSON it writes is also the input format of the
+  <a href="quality-checker.html">quality checker</a>'s own command line, so the
+  next stage can be inspected the same way
+  (see <a href="#chaining">Chaining into the quality checker</a>).</p>
+
+  <div class="callout">
+    <strong>It does not write to a database.</strong> To ingest a report
+    (extract → quality checks → persist → rescore), use
+    <code>threatlens-ingest</code> or the dashboard's Ingest page. Both run
+    <code>dashboard/ingest_worker.py</code>, which is also what the
+    <a href="evaluation-reports.html">evaluation runs</a> use.
+  </div>
+
+  <table>
+    <thead><tr><th>Command</th><th>Does</th><th>Writes</th></tr></thead>
+    <tbody>
+      <tr><td><code>threatlens</code></td><td>Extract and verify one report</td><td>Terminal summary; JSON file with <code>-o</code></td></tr>
+      <tr><td><code>threatlens-ingest</code></td><td>Extract, quality checks, persist, rescore</td><td>The SQLite database given by <code>--db</code></td></tr>
+      <tr><td><code>threatlens init</code></td><td>Setup wizard: asks for every setting, writes it, creates the database (<a href="#init">below</a>)</td><td><code>threatlens.conf</code> (previous kept as <code>.bak</code>); the database</td></tr>
+      <tr><td><code>threatlens-calibrate</code></td><td>Benchmark the Ollama server and suggest LLM settings (<a href="#calibrate">below</a>)</td><td><code>threatlens.conf</code>: <code>[ollama]</code>, <code>[models] verifier</code>, <code>[llm]</code>, <code>[calibration]</code></td></tr>
+      <tr><td><code>threatlens-dashboard</code></td><td>The web UI (<a href="dashboard-webui.html">Dashboard</a>)</td><td>The active database; <code>threatlens.conf</code> from its Configuration page</td></tr>
+      <tr><td><code>python -m threatlens.db.migrate [DB]</code></td><td>Create or upgrade a database's schema with the migrations shipped in the package (<a href="database-schema.html#creating">Database</a>)</td><td>The SQLite file <code>DB</code> (default: threatlens.conf's database in <code>db/</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="section">How it works</h2>
+
+  <ol class="steps">
+    <li>
+      <h2>Parse arguments</h2>
+      <p><code>main()</code> builds the parser with <code>build_parser()</code> and calls <code>run(args)</code>. Expected failures (<code>OSError</code>, <code>UnicodeError</code>, <code>ValueError</code>, <code>RuntimeError</code>, <code>OllamaError</code>) are caught and printed as <code>error: …</code> on stderr with exit code 1, rather than a traceback.</p>
+      <span class="ref">cli.py:59, cli.py:188</span>
+    </li>
+    <li>
+      <h2>Check the source file</h2>
+      <p><code>run()</code> stops straight away with <code>source does not exist: …</code> (exit 1) if the path is not a file.</p>
+      <span class="ref">cli.py:121</span>
+    </li>
+    <li>
+      <h2>Choose the engine</h2>
+      <p><code>--engine python</code> calls <code>ioc_extract_python.analyse_document()</code> directly; no settings are loaded and no network is used.</p>
+      <p>For the default <code>llm</code> engine, every LLM setting comes from <code>threatlens.conf</code> (or the file named by <code>--config</code>): the Ollama URL, the models and the <code>[llm]</code> performance tuning, with built-in defaults for anything missing. <code>--ignore-calibration</code> swaps in the built-in <code>[llm]</code> tuning only. A bad value stops the run with <code>error: …</code>.</p>
+      <p>It then runs the <a href="#setup-check">setup check</a> and prints a <code>warning: …</code> line on stderr for each step not yet done (no file, unedited template, not calibrated; the calibration warning is dropped with <code>--ignore-calibration</code>). Warnings never stop the run.</p>
+      <span class="ref">cli.py:126–137</span>
+    </li>
+    <li>
+      <h2>Extract and verify</h2>
+      <p><code>ioc_extract_llm_fs.analyse_document()</code> reads the report (PDF via PyMuPDF, or plain text), extracts regex candidates and metadata, profiles the document once with the profiler model, then sends the candidates to the verifier model in batches. The python engine shares the same reading and candidate extraction and differs only in the verifier. See the <a href="extraction-engine.html">Extraction Engine</a> page for what happens inside.</p>
+      <p>Both engines return the same <code>IoCExtractionResult</code> object, held in memory.</p>
+      <span class="ref">cli.py:138</span>
+    </li>
+    <li>
+      <h2>Print the summary</h2>
+      <p>Four lines: metadata (source, publish date, author count), candidate count with engine and model, verdict counts, and, for the llm engine, the primary scope with its tactical/operational/strategic flags.</p>
+      <span class="ref">cli.py:152–173</span>
+    </li>
+    <li>
+      <h2>Write JSON (optional)</h2>
+      <p>With <code>-o</code>, the result's <code>to_dict()</code> is written as indented UTF-8 JSON, creating parent directories as needed. <code>--accepted-only</code> trims the <code>indicators</code> list here.</p>
+      <span class="ref">cli.py:175–183</span>
+    </li>
+  </ol>
+
+  <h2 class="section">Using it</h2>
+
+  <h3>Prerequisites</h3>
+  <ul>
+    <li>The project installed into a virtual environment (<code>pip install -e .</code> from a checkout, or a plain <code>pip install</code> of the package), which provides the <code>threatlens</code>, <code>threatlens-ingest</code>, <code>threatlens-calibrate</code> and <code>threatlens-dashboard</code> commands. <code>python -m threatlens.cli</code> works too.</li>
+    <li>For the <code>llm</code> engine, a reachable Ollama server with the verifier model pulled. The <code>python</code> engine needs neither.</li>
+    <li>Settings are read from <code>threatlens.conf</code>, wherever <a href="#locations">the layout</a> puts it (the repo root in a checkout, the per-user config folder when pip-installed, or <code>THREATLENS_CONF</code>), whatever the current directory. Run <code>threatlens-calibrate</code> once to tune its <code>[llm]</code> section for your Ollama server.</li>
+  </ul>
+
+  <h3>Synopsis</h3>
+<pre><code>threatlens SOURCE [--engine {llm,python}] [--config FILE]
+                  [--ignore-calibration] [--accepted-only] [-o FILE] [-v|-vv|-vvv]</code></pre>
+
+  <h3>Arguments</h3>
+  <table>
+    <thead><tr><th>Argument</th><th>Default</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>SOURCE</code></td><td>required</td><td>The report to analyse: <code>.pdf</code>, or text (<code>.txt</code>, <code>.md</code>, <code>.log</code>, <code>.csv</code>, <code>.json</code>, or no extension). Any other extension fails with <code>Unsupported input type</code>.</td></tr>
+      <tr><td><code>--engine llm|python</code></td><td><code>llm</code></td><td><code>llm</code>: Ollama-hosted model verifies candidates and the document gets a scope profile. <code>python</code>: local heuristics only, no LLM or network.</td></tr>
+      <tr><td><code>--config FILE</code></td><td>The <a href="#locations">usual <code>threatlens.conf</code></a></td><td>llm engine only. A <code>threatlens.conf</code>-format file to read settings from instead. A file named here must exist.</td></tr>
+      <tr><td><code>--ignore-calibration</code></td><td>off</td><td>llm engine only. Use the built-in <code>[llm]</code> tuning instead of the file's. Its Ollama URL and models still apply.</td></tr>
+      <tr><td><code>--accepted-only</code></td><td>off</td><td>The JSON <code>indicators</code> list keeps only <code>confirmed_ioc</code> and <code>context_entity</code> candidates, dropping <code>rejected</code> and <code>uncertain</code>. The summary counts are not affected.</td></tr>
+      <tr><td><code>-o</code>, <code>--output FILE</code></td><td>none</td><td>Write the full result as JSON to <code>FILE</code>. Without it, only the summary is printed.</td></tr>
+      <tr><td><code>-v</code>, <code>-vv</code>, <code>-vvv</code></td><td>quiet</td><td>Progress detail on stderr. <code>-v</code>: stages, scope and LLM batch progress. <code>-vv</code>: each candidate as it is verified. <code>-vvv</code>: raw Ollama request/response debug.</td></tr>
+      <tr><td><code>-h</code>, <code>--help</code></td><td></td><td>Print usage and exit.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Where the LLM settings come from</h3>
+  <p>One file, <code>threatlens.conf</code>; built-in defaults (<code>ThreatLensConfig</code> / <code>LLMSettings</code> in <code>config.py</code>) fill anything it leaves out:</p>
+  <table>
+    <thead><tr><th>Section</th><th>Supplies</th><th>Built-in default</th></tr></thead>
+    <tbody>
+      <tr><td><code>[ollama]</code></td><td>Ollama URL</td><td><code>http://127.0.0.1:11434</code></td></tr>
+      <tr><td><code>[models]</code></td><td>Verifier and profiler models</td><td><code>qwen3.5:4b</code>; profiler = verifier</td></tr>
+      <tr><td><code>[llm]</code></td><td>Performance tuning: <code>batch_size</code>, <code>timeout</code>, <code>num_ctx</code>, <code>num_predict</code>, <code>context_chars</code>, <code>max_retries</code></td><td>5, 600s, 4096, 384, 300, 3</td></tr>
+    </tbody>
+  </table>
+  <p><code>threatlens-calibrate</code> benchmarks the server and writes <code>[ollama]</code>, the verifier model, <code>[llm]</code> and a <code>[calibration]</code> record of what it measured, keeping every other section. The dashboard's Configuration page edits the URL and models and keeps <code>[llm]</code>.</p>
+  <p>The summary line <code>model=…</code> shows which verifier model was actually used.</p>
+  <p>This replaces the earlier separate <code>llm_calibration.conf</code>: its
+  <code>[llm]</code> keys now live in <code>threatlens.conf</code>, and its
+  model and URL are the <code>[models] verifier</code> and
+  <code>[ollama] url</code> values, so there is one file and one lookup.
+  <code>--calibration-config</code> became <code>--config</code>.</p>
+
+  <h3 id="init">Setting up: <code>threatlens init</code></h3>
+  <p>pip cannot ask questions while it installs, so this is the first command
+  to run afterwards (also <code>threatlens-init</code>). It asks for each
+  setting, with the current <code>threatlens.conf</code> values as the
+  defaults when the file exists, so re-running it to change one thing is
+  quick:</p>
+  <ol>
+    <li><strong>Data folder</strong> for databases and reports (<a href="#locations">default by layout</a>); checked for write access.</li>
+    <li><strong>LLM engine?</strong> Answering no skips the Ollama questions; the python engine needs none.</li>
+    <li><strong>Ollama URL</strong>, tested live. If unreachable: retry, keep it anyway, or skip LLM setup.</li>
+    <li><strong>Verifier and profiler models</strong>, chosen from the models the server has pulled (or typed). The default is the configured model, else <code>qwen3.5:9b</code> if pulled, else the first one listed.</li>
+    <li><strong>Calibrate now?</strong> Offered when the chosen model is available; runs <a href="#calibrate"><code>threatlens-calibrate</code></a>'s benchmark at the end.</li>
+    <li><strong>Database</strong> file name, and whether to create or upgrade it now.</li>
+    <li><strong>Dashboard address</strong>: this machine only (<code>127.0.0.1</code>, default) or the local network (<code>0.0.0.0</code>, after a warning, since the dashboard has no login), and the port.</li>
+    <li><strong>Quality weights</strong>, only if asked; re-asked until they sum to 1.00.</li>
+  </ol>
+  <p>A summary is shown and nothing is written until it is confirmed. Then the
+  wizard keeps the previous file as <code>threatlens.conf.bak</code>, writes
+  the new one with <code>config.save_config()</code> (as the dashboard and
+  calibration do; <code>[llm]</code> and <code>[calibration]</code> are kept
+  unless it calibrates), creates or upgrades the database with the shipped
+  migrations, fills its reference tables only if they are empty (so it is
+  safe on a database in use), calibrates if chosen, and lists anything still
+  to do. A file that cannot be read can be replaced from the defaults, with
+  the old one kept.</p>
+<pre><code>threatlens init
+threatlens init --non-interactive --ollama-url http://host:11434 --verifier qwen3.5:9b
+threatlens init --non-interactive --data-dir /srv/threatlens --host 0.0.0.0 --port 8080 --no-database</code></pre>
+  <p><code>--non-interactive</code> asks nothing: it starts from the current
+  file (or the defaults), applies <code>--data-dir</code>,
+  <code>--ollama-url</code>, <code>--verifier</code>, <code>--profiler</code>,
+  <code>--database</code>, <code>--host</code>, <code>--port</code>, and creates
+  the database unless <code>--no-database</code>; <code>--calibrate</code>
+  also benchmarks. Without it, <code>threatlens init</code> refuses to run
+  when input is not a terminal.</p>
+  <p><strong>First run:</strong> <code>threatlens</code> (llm engine),
+  <code>threatlens-ingest</code> and <code>threatlens-dashboard</code> offer to
+  run the wizard when there is no <code>threatlens.conf</code> and they are
+  running in a terminal. Answering no continues on the built-in defaults.
+  Jobs started by the dashboard, scripts and pipes are never prompted, and
+  <code>THREATLENS_NO_SETUP=1</code> turns the offer off.</p>
+
+  <h3 id="setup-check">Setup check</h3>
+  <p><code>config.setup_status()</code> reports how far
+  <code>threatlens.conf</code> is from set up. <code>threatlens</code> (llm
+  engine), <code>threatlens-ingest</code> and the dashboard's Ingest worker
+  (<code>[WARN]</code> log lines), <code>threatlens-dashboard</code> at
+  startup (<code>SETUP:</code> lines) and the dashboard's Configuration and
+  Ingest pages all warn from it. Nothing is blocked; built-in defaults fill
+  the gaps meanwhile.</p>
+  <table>
+    <thead><tr><th>State</th><th>Detected by</th><th>Cleared by</th></tr></thead>
+    <tbody>
+      <tr><td>Missing</td><td>No file at the configured path</td><td><a href="#init"><code>threatlens init</code></a>, <code>threatlens-calibrate --save</code> or saving from the Configuration page (each creates it); in a checkout also <code>cp threatlens.conf.example threatlens.conf</code></td></tr>
+      <tr><td>Unedited template</td><td>The file still carries the template's marker comment (<code># threatlens: unedited template</code>) <em>and</em> the template's values</td><td><code>threatlens init</code>, changing any value, deleting the marker line, or any save from the Configuration page or calibration (none of them write the marker)</td></tr>
+      <tr><td>Not calibrated</td><td>No <code>[calibration]</code> record and <code>[llm]</code> still at the built-in values</td><td><code>threatlens-calibrate</code>, or tuning <code>[llm]</code> by hand. Only reported where the llm engine is used.</td></tr>
+      <tr><td>Invalid</td><td>The file cannot be parsed or fails validation</td><td>Fixing the value named in the message</td></tr>
+    </tbody>
+  </table>
+  <p><code>threatlens.conf.example</code> is generated from
+  <code>config.render(TEMPLATE, template=True)</code>, and a test fails if the
+  two drift apart.</p>
+
+  <h3 id="locations">Where files live</h3>
+  <p><code>threatlens/paths.py</code> resolves every location, so the same
+  commands work from a repo checkout and from a pip install. The layout is
+  detected automatically:</p>
+  <table>
+    <thead><tr><th></th><th>Checkout (incl. <code>pip install -e .</code>)</th><th>pip install (Linux; see below for others)</th></tr></thead>
+    <tbody>
+      <tr><td><code>threatlens.conf</code></td><td>repo root</td><td><code>~/.config/threatlens/threatlens.conf</code></td></tr>
+      <tr><td>Databases</td><td><code>db/</code></td><td><code>~/.local/share/threatlens/db/</code></td></tr>
+      <tr><td>Report PDFs (uploads, downloads, ingest)</td><td><code>docs/database/CTI/</code></td><td><code>~/.local/share/threatlens/reports/</code></td></tr>
+    </tbody>
+  </table>
+  <p>On Windows the folders are <code>%APPDATA%\threatlens</code> (config) and
+  <code>%LOCALAPPDATA%\threatlens</code> (data); on macOS both are
+  <code>~/Library/Application Support/threatlens</code>. Overrides, highest
+  first: <code>THREATLENS_CONF</code> for the config file;
+  <code>THREATLENS_HOME</code>, then <code>[paths] data_dir</code> in
+  <code>threatlens.conf</code>, for the data folder (which then holds
+  <code>db/</code> and <code>reports/</code>). Report paths stored in the
+  database are relative to the data folder, so a checkout's existing
+  <code>docs/database/CTI/…</code> rows still resolve. The dashboard's
+  Configuration page shows the folders in use.</p>
+
+  <h3 id="calibrate">Calibrating the LLM settings: <code>threatlens-calibrate</code></h3>
+  <p>Also <code>python -m threatlens.extractors.calibration</code>. It warms
+  the model, times structured verification requests at several batch sizes,
+  picks the smallest batch within 8% of the best throughput, labels the
+  hardware (<code>cpu-minimal</code> … <code>gpu-high</code>) and suggests
+  <code>[llm]</code> values. Saved, it writes <code>[ollama] url</code>,
+  <code>[models] verifier</code>, <code>[llm]</code> and
+  <code>[calibration]</code> into <code>threatlens.conf</code> and keeps every
+  other section. An existing file that cannot be read is reported before any
+  benchmarking and is never overwritten.</p>
+  <table>
+    <thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>--model</code></td><td><code>[models] verifier</code></td><td>Model to benchmark</td></tr>
+      <tr><td><code>--ollama-url</code> / <code>--ollama-ip</code> + <code>--ollama-port</code></td><td><code>[ollama] url</code></td><td>Server to benchmark (port default 11434)</td></tr>
+      <tr><td><code>--config FILE</code></td><td>The <a href="#locations">usual <code>threatlens.conf</code></a></td><td>File to read and update</td></tr>
+      <tr><td><code>--batch-sizes</code></td><td><code>1,3,5,8</code></td><td>Batch sizes to try</td></tr>
+      <tr><td><code>--repetitions</code> / <code>--attempts</code></td><td>1 / 3</td><td>Timed runs per size; attempts per run</td></tr>
+      <tr><td><code>--num-ctx</code> / <code>--num-predict</code> / <code>--timeout</code></td><td>4096 / 2048 / 300</td><td>Benchmark request settings</td></tr>
+      <tr><td><code>--save</code> / <code>--no-save</code></td><td>prompt when interactive</td><td>Save without asking, or never save</td></tr>
+    </tbody>
+  </table>
+<pre><code>threatlens-calibrate                                   # re-tune the configured model and server
+threatlens-calibrate --model qwen3.5:9b --ollama-url http://host:11434 --save</code></pre>
+  <p>For a setup script, <code>calibrate()</code> and
+  <code>save_calibration()</code> in <code>extractors/calibration.py</code> do
+  the same without the command line. pip cannot run calibration while
+  installing (it never prompts and needs a running Ollama), so it is a step
+  after installation.</p>
+
+  <h3>Examples</h3>
+<pre><code># Summary only, default llm engine
+threatlens docs/database/CTI/report.pdf
+
+# No LLM available: heuristic verifier
+threatlens report.pdf --engine python
+
+# Full result as JSON, with batch progress
+threatlens report.pdf -o out/report.llm.json -v
+
+# Only accepted candidates in the JSON
+threatlens report.pdf -o out/report.accepted.json --accepted-only
+
+# One-off settings file, or built-in [llm] tuning
+threatlens report.pdf --config ~/threatlens.low_cpu.conf
+threatlens report.pdf --ignore-calibration</code></pre>
+
+  <h3>Console output</h3>
+  <p>From one of the evaluation corpus reports with the python engine:</p>
+<pre><code>$ threatlens docs/database/CTI/fdf53fac0af9cced76179fb1b9df0ce009952e36.pdf --engine python -o py.json
+metadata: Skia/PDF m90, published 2022-02-21, 0 author(s)
+extract:  3 candidates from fdf53fac0af9cced76179fb1b9df0ce009952e36.pdf (python engine, model=python-heuristics)
+verify:   3 confirmed, 0 context, 0 rejected
+output:   py.json</code></pre>
+  <p>The llm engine adds a fourth line, for example
+  <code>scope:    tactical (tactical=True, operational=False, strategic=False)</code>.
+  The <code>verify</code> line does not count <code>uncertain</code> verdicts;
+  the JSON <code>summary</code> does.</p>
+
+  <h3>JSON output</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><code>metadata</code></td><td><code>filename</code>, <code>title</code>, <code>authors</code>, <code>cti_source</code>, <code>source_url</code>, <code>publish_date</code>, <code>file_sha256</code>, and <code>extraction_method</code> (which heuristic found each field)</td></tr>
+      <tr><td><code>verification_model</code></td><td>The verifier model, or <code>python-heuristics</code></td></tr>
+      <tr><td><code>scope</code></td><td>llm engine: <code>primary_scope</code>, <code>reason</code>, <code>structure_summary</code> and the three <code>has_*_content</code> flags. <code>null</code> for the python engine.</td></tr>
+      <tr><td><code>summary</code></td><td>Counts: candidates, confirmed, context, rejected, uncertain</td></tr>
+      <tr><td><code>indicators</code></td><td>One entry per candidate (see below)</td></tr>
+      <tr><td><code>accepted_by_category</code></td><td>Accepted candidates grouped by <code>network</code>, <code>host</code>, <code>email</code>, <code>behaviour</code>, <code>intelligence</code></td></tr>
+    </tbody>
+  </table>
+  <p>One <code>indicators</code> entry, abridged:</p>
+<pre><code>{
+  "id": "ba27359faf1a32066466",
+  "category": "network",
+  "indicator_type": "url",
+  "value": "blog.alyac.co.kr/4501",
+  "normalized_value": "blog.alyac.co.kr/4501",
+  "start": 119,
+  "end": 140,
+  "context": "… customer center! blog.alyac.co.kr/4501 Detailed content body …",
+  "method": "regex:schemeless-url",
+  "attributes": { "was_defanged": false, "document_section_hint": "…" },
+  "verification": {
+    "candidate_id": "ba27359faf1a32066466",
+    "status": "confirmed_ioc",
+    "confidence": 0.76,
+    "reason": "Candidate appears in malicious CTI context but lacks stronger structural evidence.",
+    "evidence": "nearby_label=ESRC | …",
+    "corrected_category": "network",
+    "corrected_indicator_type": "url"
+  },
+  "accepted": true
+}</code></pre>
+  <p><code>start</code>/<code>end</code> are character offsets into the extracted
+  text, and <code>context</code> is the window either side of the match that the
+  verifier saw. <code>verification.confidence</code> is confidence in the
+  <em>verdict</em>, not in maliciousness. <code>accepted</code> is true for
+  <code>confirmed_ioc</code> and <code>context_entity</code>.</p>
+
+  <h3 id="chaining">Chaining into the quality checker</h3>
+  <p>The quality checker reads these JSON files directly, so the QA stage can be
+  inspected without a database too:</p>
+<pre><code>threatlens report.pdf -o llm.json
+threatlens report.pdf --engine python -o python.json
+
+python -m threatlens.quality.quality_checker llm.json --show all
+python -m threatlens.quality.quality_checker llm.json --compare python.json</code></pre>
+  <p><code>--compare</code> enables the cross-verifier agreement grading. Both
+  files must come from the same report.</p>
+
+  <h3>Exit codes and errors</h3>
+  <table>
+    <thead><tr><th>Exit</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><code>0</code></td><td>Extraction finished (and the JSON was written, if asked for)</td></tr>
+      <tr><td><code>1</code></td><td>Source file missing; unsupported file type; unreadable or invalid <code>threatlens.conf</code>, or a <code>--config</code> file that does not exist; Ollama unreachable or still failing after retries; PDF support (PyMuPDF) missing</td></tr>
+      <tr><td><code>2</code></td><td>Invalid arguments (argparse)</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Source: <code>src/threatlens/cli.py</code> ·
+    engines: <code>extractors/ioc_extract_llm_fs.py</code>, <code>extractors/ioc_extract_python.py</code> ·
+    settings: <code>config.py</code>, tuned by <code>extractors/calibration.py</code> ·
+    ingest instead: <code>dashboard/ingest_worker.py</code> (<code>threatlens-ingest</code>)
+  </footer>
+</main>
+</body>
+</html>

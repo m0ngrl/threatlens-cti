@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ThreatLens - Report Files</title>
+<link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+<header class="app-header">
+  <a class="back-link" href="/">&larr; Back to dashboard</a>
+</header>
+
+<main>
+  <h1 class="uploads-title">Report Files</h1>
+  <p class="uploads-intro">
+    CTI report PDFs in <code id="uploads-dir">docs/database/CTI</code>, the folder the extraction
+    pipeline reads from. Uploading a file does not ingest it, and removing one does not delete
+    its report from the database - use the Reports tab for that.
+  </p>
+
+  <section class="detail-card upload-card">
+    <h2>Upload reports</h2>
+    <label id="upload-drop" class="upload-drop">
+      <input id="upload-input" type="file" accept=".pdf,application/pdf" multiple />
+      <span id="upload-drop-text">Drop PDF files here, or click to choose</span>
+    </label>
+    <div class="upload-actions">
+      <label class="upload-overwrite">
+        <input id="upload-overwrite" type="checkbox" /> Replace files with the same name
+      </label>
+      <button id="upload-btn" type="button" disabled>Upload</button>
+    </div>
+    <div id="upload-result" class="upload-result"></div>
+  </section>
+
+  <div class="toolbar uploads-toolbar">
+    <input id="files-search" type="text" placeholder="Filter by filename..." />
+    <span id="files-summary" class="uploads-summary"></span>
+    <button id="files-refresh" class="secondary" type="button">Refresh</button>
+    <button id="files-delete-selected" class="danger" type="button" disabled>Remove selected</button>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="check-col"><input id="files-select-all" type="checkbox" title="Select all shown" /></th>
+        <th>Filename</th>
+        <th>Size</th>
+        <th>Modified</th>
+        <th>In database</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="files-body"></tbody>
+  </table>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/uploads.js"></script>
+</body>
+</html>

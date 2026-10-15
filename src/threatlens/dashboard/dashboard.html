@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ThreatLens Dashboard</title>
+<link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+<header class="app-header">
+  <div class="header-top">
+    <h1>ThreatLens</h1>
+    <div class="header-right">
+      <a class="ingest-button" href="/ingest">Ingest</a>
+      <a class="header-link" href="/uploads">Upload Reports</a>
+      <a class="header-link" href="/config">Configuration</a>
+      <a class="header-link" href="/docs/" target="_blank" rel="noopener">Documentation</a>
+      <label class="db-selector-label">
+        <a id="db-browser-link" class="header-link" href="/db-browser/" target="_blank" rel="noopener">Database:</a>
+        <select id="db-selector"></select>
+      </label>
+    </div>
+  </div>
+  <div id="stat-cards" class="stat-cards"></div>
+  <div class="grade-legend">
+    <span><span class="dot grade-actionable"></span>Actionable</span>
+    <span><span class="dot grade-reliable"></span>Reliable</span>
+    <span><span class="dot grade-usable"></span>Usable</span>
+    <span><span class="dot grade-marginal"></span>Marginal</span>
+    <span><span class="dot grade-unreliable"></span>Unreliable</span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="sources">Reports</button>
+  <button class="tab-btn" data-tab="indicators">Indicators</button>
+  <button class="tab-btn" data-tab="quality-flags">Quality Flags</button>
+</nav>
+
+<main>
+  <section id="tab-sources" class="tab-panel active">
+    <table id="sources-table" class="data-table sortable">
+      <thead>
+        <tr>
+          <th data-sort="id">ID</th>
+          <th data-sort="title">Title</th>
+          <th data-sort="avg_quality_score" data-sort-first="desc">Quality</th>
+          <th data-sort="filename">Source</th>
+          <th data-sort="source_type">Type</th>
+          <th data-sort="reliability" data-sort-first="desc">Reliability</th>
+          <th data-sort="extraction_engine">Engine</th>
+          <th data-sort="indicator_count" data-sort-first="desc">Indicators</th>
+          <th data-sort="ingested_at" data-sort-first="desc">Ingested</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="sources-body"></tbody>
+    </table>
+  </section>
+
+  <section id="tab-indicators" class="tab-panel">
+    <div class="toolbar">
+      <input id="indicator-search" type="text" placeholder="Search value..." />
+      <select id="indicator-type-filter">
+        <option value="">All types</option>
+      </select>
+      <input id="indicator-min-score" type="number" min="0" max="100" placeholder="Min score" />
+      <select id="indicator-engine-filter" title="Which verifier judged the indicator">
+        <option value="">All engines</option>
+        <option value="llm">LLM</option>
+        <option value="python">Python</option>
+        <option value="unknown">Unknown</option>
+      </select>
+      <button id="indicator-refresh">Refresh</button>
+    </div>
+    <table id="indicators-table" class="data-table sortable">
+      <thead>
+        <tr>
+          <th data-sort="id">ID</th>
+          <th data-sort="ioc_type">Type</th>
+          <th data-sort="value">Value</th>
+          <th data-sort="confidence" data-sort-first="desc">Confidence</th>
+          <th data-sort="quality_score" data-sort-first="desc">Quality</th>
+          <th data-sort="sighting_count" data-sort-first="desc">Sightings</th>
+          <th title="Verifier that judged the indicator, from the reports it was sighted in">Engine</th>
+          <th data-sort="last_seen" data-sort-first="desc">Last seen</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="indicators-body"></tbody>
+    </table>
+    <div id="indicators-pager" class="pager"></div>
+  </section>
+
+  <section id="tab-quality-flags" class="tab-panel">
+    <div class="toolbar">
+      <select id="flag-status-filter">
+        <option value="">All statuses</option>
+        <option value="open" selected>Open</option>
+        <option value="dismissed">Dismissed</option>
+        <option value="resolved">Resolved</option>
+      </select>
+      <button id="flag-refresh">Refresh</button>
+    </div>
+    <table id="flags-table" class="data-table sortable">
+      <thead>
+        <tr>
+          <th data-sort="id">ID</th>
+          <th data-sort="indicator_value">Indicator</th>
+          <th data-sort="flag_type">Type</th>
+          <th data-sort="dimension">Dimension</th>
+          <th data-sort="severity" data-sort-first="desc">Severity</th>
+          <th data-sort="detail">Detail</th>
+          <th data-sort="status">Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="flags-body"></tbody>
+    </table>
+  </section>
+</main>
+
+<div id="edit-modal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Edit indicator</h2>
+    <form id="edit-form"></form>
+    <div class="modal-actions">
+      <button id="edit-cancel" type="button">Cancel</button>
+      <button id="edit-save" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/indicators.js"></script>
+<script src="/static/js/sources.js"></script>
+<script src="/static/js/quality_flags.js"></script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

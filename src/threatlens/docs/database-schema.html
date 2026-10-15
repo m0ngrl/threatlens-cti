@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database &amp; Schema — ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+    --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 24px;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.2em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  tr:nth-child(even) { background: #fbfcfd; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 1.5em;
+  }
+  .stub-notice {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    background: var(--code-bg);
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: 1.5em 0 2em;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+    tr:nth-child(even) { background: #10151c; }
+  }
+  h3 { font-size: 1.05rem; margin-top: 1.8em; }
+  h4 { font-size: 0.95rem; margin: 1.4em 0 0.4em; }
+  @media (max-width: 600px) { .wrap { padding: 32px 16px 64px; } }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a href="extraction-engine.html">Extraction Engine</a>
+    <a href="database-schema.html" aria-current="page">Database &amp; Schema</a>
+    <a href="quality-checker.html">Quality Checker</a>
+    <a href="dashboard-webui.html">Dashboard / Web UI</a>
+    <a href="cli_rundown.html">CLI</a>
+    <a href="evaluation-reports.html">Evaluation Reports</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<span class="badge">ThreatLens · ZEIT3118 Capstone</span>
+<h1>Database &amp; Schema</h1>
+
+<p>ThreatLens stores everything it learns in a seven-table SQLite database,
+defined with SQLAlchemy 2.0 models and built with Alembic migrations. The
+schema is at <strong>v1.5</strong> (Alembic head <code>b246eb301c95</code>).</p>
+<p>The ingest pipeline is the only thing that adds data: one report becomes
+a source, its archived document, the indicators it contains, a sighting for
+each, and any quality flags. The dashboard reads the database and allows a
+few manual edits. The <code>threatlens</code> CLI and the extraction engine
+never touch it.</p>
+
+<h2>Entity overview</h2>
+<pre><code>sources ──1:1── raw_documents           (the report, identified by its SHA-256)
+   │
+   │ 1:N
+   ▼
+sightings ── N:1 ──▶ indicators ── 1:N ──▶ quality_flags
+(indicator × report,  (one row per unique
+ with the excerpt)     ioc_type + normalised value)
+
+allowlist        known-benign patterns (reference data)
+scoring_config   dimension weights and bands (reference data)</code></pre>
+<p>An indicator seen in five reports is <strong>one</strong>
+<code>indicators</code> row with five <code>sightings</code>. That is the
+schema's answer to the client's duplication problem: repeated observation
+across sources is corroboration, recorded as sightings, not as duplicate
+rows. Duplication is prevented at two levels by UNIQUE constraints:
+<code>raw_documents.sha256</code> (the same report ingested twice) and
+<code>indicators (ioc_type, normalised)</code> (the same value under two
+representations).</p>
+
+<h2>Tables</h2>
+<p>All timestamps are ISO-8601 UTC text (e.g. <code>2026-10-12T15:23:44Z</code>).
+JSON columns are TEXT guarded by a <code>json_valid()</code> CHECK.</p>
+
+<h3><code>sources</code>: one row per report</h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>INTEGER PK</td><td></td></tr>
+<tr><td><code>name</code></td><td>TEXT NOT NULL</td><td>The report's filename</td></tr>
+<tr><td><code>source_type</code></td><td>TEXT NOT NULL</td><td><code>report</code> for everything ingested so far</td></tr>
+<tr><td><code>url</code></td><td>TEXT</td><td>The report's own URL, if the extractor found one</td></tr>
+<tr><td><code>ingested_at</code></td><td>TEXT NOT NULL</td><td>Defaults to <code>datetime('now')</code></td></tr>
+<tr><td><code>raw_metadata</code></td><td>TEXT (JSON)</td><td>The extractor's document metadata (title, authors, publisher, publish date, URL, <code>file_sha256</code>, how each field was found) plus <code>candidate_count</code></td></tr>
+<tr><td><code>reliability</code></td><td>INTEGER 0–100</td><td>Share of the report's candidates not rejected by the quality checker. Drives the accuracy dimension.</td></tr>
+<tr><td><code>extraction_engine</code></td><td>TEXT</td><td><code>python</code>, <code>llm</code> or <code>llm+python</code> (CHECK); NULL for reports ingested before v1.5</td></tr>
+<tr><td><code>verification_model</code></td><td>TEXT</td><td>The verifier model(s), e.g. <code>qwen3.5:9b</code> or <code>python-heuristics</code>, comma-joined if both</td></tr>
+</tbody>
+</table>
+
+<h3><code>raw_documents</code>: the archived report, 1:1 with sources</h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>source_id</code></td><td>INTEGER FK, UNIQUE</td><td><code>ON DELETE CASCADE</code></td></tr>
+<tr><td><code>content_type</code></td><td>TEXT NOT NULL</td><td>e.g. <code>application/pdf</code></td></tr>
+<tr><td><code>raw_text</code> / <code>file_path</code></td><td>TEXT</td><td>At least one must be set (CHECK). The ingest pipeline stores the path relative to the data folder when the file is inside it (<code>docs/database/CTI/….pdf</code> in a checkout, <code>reports/….pdf</code> when pip-installed), absolute otherwise; not the content. The PDF stays on disk.</td></tr>
+<tr><td><code>sha256</code></td><td>TEXT NOT NULL, UNIQUE</td><td>64 characters (CHECK), lower-case. The document's identity: the SHA-256 of the file bytes, from the extractor's <code>metadata.file_sha256</code>.</td></tr>
+<tr><td><code>size_bytes</code></td><td>INTEGER</td><td></td></tr>
+<tr><td><code>archived_at</code></td><td>TEXT NOT NULL</td><td></td></tr>
+</tbody>
+</table>
+<p>Because only the path is stored, moving or deleting a PDF in
+<code>docs/database/CTI/</code> breaks the dashboard's PDF view for that
+report, though its data stays intact.</p>
+
+<h3><code>indicators</code>: one row per unique observable</h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>ioc_type</code></td><td>TEXT NOT NULL</td><td>Database vocabulary (see <a href="#vocabulary">below</a>). No CHECK: enforced by <code>conformance.py</code> on the ingest path.</td></tr>
+<tr><td><code>value</code> / <code>normalised</code></td><td>TEXT NOT NULL</td><td>As found, and the canonical form (refanged, lower-cased where appropriate). UNIQUE <code>(ioc_type, normalised)</code>.</td></tr>
+<tr><td><code>first_seen</code></td><td>TEXT</td><td>The earliest publish date among the reports that sighted it</td></tr>
+<tr><td><code>last_seen</code></td><td>TEXT</td><td>The latest publish date among those reports. Drives timeliness. Both dates come from the reports only, never the ingest time: if no sighting report has a publish date, both are NULL and timeliness scores 0 (unknown). Ingest order does not matter.</td></tr>
+<tr><td><code>confidence</code></td><td>INTEGER 0–100</td><td>How certain it is that the value is malicious. Set when the indicator is first stored; later ingests do not change it.</td></tr>
+<tr><td><code>quality_score</code></td><td>INTEGER 0–100</td><td>Fitness of the indicator as data; recomputed by every rescore</td></tr>
+<tr><td><code>context</code></td><td>TEXT (JSON)</td><td>Structured context: the report's context entities plus the first sighting's excerpt (see below)</td></tr>
+<tr><td><code>score_components</code></td><td>TEXT (JSON)</td><td>How the score was reached (see below)</td></tr>
+<tr><td><code>scored_at</code></td><td>TEXT</td><td>When the score was last computed</td></tr>
+<tr><td><code>ctx_malware</code></td><td>generated, virtual</td><td><code>json_extract(context, '$.malware_family')</code>, so malware can be filtered without parsing JSON</td></tr>
+</tbody>
+</table>
+
+<h4><code>indicators.context</code></h4>
+<pre><code>{
+  "threat_actor": ["FEI XIAO"],          // the report's surviving context entities,
+  "malware": ["…"], "malware_family": ["…"],   // grouped by type
+  "campaign": […], "tool": […], "vulnerability": […],
+  "excerpt": "…text around the value…",  // from the extractor
+  "extraction_method": "regex:filename",
+  "attributes": {"was_defanged": false, "document_section_hint": "Technical Analysis"}
+}</code></pre>
+<p>Completeness is scored on how many of <code>threat_actor</code>,
+<code>campaign</code>, <code>vulnerability</code> and <code>tool</code> are
+present. The context is written when the indicator is first stored and only
+filled in later if it was empty, so it describes the first report the value
+was seen in. Each report's own excerpt is kept on its sighting.</p>
+
+<h4><code>indicators.score_components</code></h4>
+<pre><code>{
+  "dimensions": {"timeliness": 1, "accuracy": 5, "completeness": 2, "relevance": 3},
+  "weights":    {"timeliness": 0.25, "accuracy": 0.3, "completeness": 0.25, "relevance": 0.2},
+  "grade": "Marginal",
+  "agreement": {"agreement": "single_verifier", "winner": "llm",
+                "winning_status": "confirmed_ioc", "llm_status": "…", "llm_confidence": 1.0,
+                "python_status": null, "python_confidence": null, "confidence": 85, …},
+  "stix": {"kind": "sco", "type": "file:name"},
+  "sightings": 1,                 // added by rescore
+  "source_reliability": 100.0     // added by rescore
+}</code></pre>
+<p>Every score records the weights it was computed with, so a score can
+always be explained after the weights change. The dashboard's indicator
+page reads this to show the breakdown.</p>
+
+<h3><code>sightings</code>: indicator × report</h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>indicator_id</code>, <code>source_id</code></td><td>composite PK, FKs</td><td>Both <code>ON DELETE CASCADE</code></td></tr>
+<tr><td><code>seen_at</code></td><td>TEXT NOT NULL</td><td>The ingest time</td></tr>
+<tr><td><code>excerpt_start</code>, <code>excerpt_end</code></td><td>INTEGER</td><td>Character offsets of the value in the report's extracted text</td></tr>
+<tr><td><code>excerpt</code></td><td>TEXT</td><td>The text around the value in this report</td></tr>
+</tbody>
+</table>
+
+<h3><code>quality_flags</code>: findings against a stored indicator</h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>indicator_id</code></td><td>INTEGER FK NOT NULL</td><td><code>ON DELETE CASCADE</code></td></tr>
+<tr><td><code>flag_type</code></td><td>TEXT NOT NULL</td><td>e.g. <code>verifier_rejected</code>, <code>known_benign</code>, <code>self_reference</code> (full list on the <a href="quality-checker.html">Quality Checker</a> page)</td></tr>
+<tr><td><code>dimension</code></td><td>TEXT</td><td>The quality dimension the finding belongs to, the traceability link back to the research framework</td></tr>
+<tr><td><code>severity</code></td><td>TEXT NOT NULL</td><td><code>warning</code> (default; screened as not malicious) or <code>info</code> (kept with a caveat). <code>error</code> findings belong to rejected candidates, which are never stored.</td></tr>
+<tr><td><code>detail</code></td><td>TEXT</td><td>Human-readable reason, including the verifier's reasoning where relevant</td></tr>
+<tr><td><code>raised_at</code></td><td>TEXT NOT NULL</td><td></td></tr>
+<tr><td><code>status</code></td><td>TEXT NOT NULL</td><td><code>open</code> (default); the dashboard sets <code>resolved</code> or <code>dismissed</code>. No CHECK.</td></tr>
+</tbody>
+</table>
+<p>A flag type already recorded against an indicator is not raised again.
+Flags exist only for <em>stored</em> indicators; candidates the quality
+checker rejected outright are not in the database at all.</p>
+
+<h3><code>allowlist</code> and <code>scoring_config</code>: reference data</h3>
+<table>
+<thead><tr><th>Table</th><th>Columns</th><th>Seeded with</th></tr></thead>
+<tbody>
+<tr><td><code>allowlist</code></td><td><code>ioc_type</code>, <code>pattern</code>, <code>reason</code></td><td>16 entries: public DNS resolvers, RFC 1918 and loopback ranges, and major vendor domains. Patterns are exact, CIDR or <code>*.suffix</code>.</td></tr>
+<tr><td><code>scoring_config</code></td><td><code>dimension</code>, <code>weight</code>, <code>parameters</code> (JSON bands), <code>effective_from</code></td><td>One row per scored dimension: timeliness 0.25, accuracy 0.30, completeness 0.25, relevance 0.20, with the Table 7 band thresholds</td></tr>
+</tbody>
+</table>
+<p>The latest <code>scoring_config</code> row per dimension is the one in
+force. <code>threatlens.conf [quality.weights]</code> overrides its weights
+when that section exists, so check both before reading a score. The
+<code>allowlist</code> table is seeded but not yet read during ingest;
+screening uses the same list from <code>seed.py</code> directly.</p>
+
+<h2 id="vocabulary">Indicator type vocabulary</h2>
+<p><code>conformance.to_ioc_type()</code> maps the extractor's types to the
+database's. Two are narrowed using attributes the extractor supplies, so
+that allowlist entries (stored as <code>ipv4</code>) can match:</p>
+<table>
+<thead><tr><th>Extractor type</th><th>Stored as</th></tr></thead>
+<tbody>
+<tr><td><code>ip</code></td><td><code>ipv4</code> / <code>ipv6</code> (from <code>ip_version</code>)</td></tr>
+<tr><td><code>hash</code></td><td><code>md5</code> / <code>sha1</code> / <code>sha256</code> / <code>sha512</code> (from <code>algorithm</code>)</td></tr>
+<tr><td><code>registry</code></td><td><code>registry_key</code></td></tr>
+<tr><td><code>domain</code>, <code>url</code>, <code>hostname</code>, <code>port</code>, <code>certificate</code>, <code>user_agent</code>, <code>filename</code>, <code>filepath</code>, <code>mutex</code>, <code>process</code>, <code>email_address</code>, <code>email_domain</code>, <code>email_subject</code>, <code>email_header</code>, <code>attachment</code>, …</td><td>Unchanged</td></tr>
+<tr><td><code>malware</code>, <code>threat_actor</code>, <code>campaign</code>, <code>tool</code>, <code>vulnerability</code>, <code>ttp</code></td><td>Never stored as rows; folded into <code>indicators.context</code></td></tr>
+</tbody>
+</table>
+<p>In the ex4 run the stored types were, by count: domain, ipv4, sha256,
+url, filename, filepath, email_address, md5, sha1, and a few others.</p>
+
+<h2>How data gets in, and out</h2>
+<h3>Ingest</h3>
+<p>The only path that adds data, used by the dashboard's Ingest page,
+<code>threatlens-ingest</code> and the evaluation runs (see the
+<a href="quality-checker.html#output">Quality Checker</a> for the full flow):</p>
+<ol>
+  <li><code>quality_checker.persist_report()</code> builds an
+  <code>indicators</code> row for each stored candidate and validates it
+  with <code>conformance.validate_indicator_row()</code>, which mirrors the
+  CHECK constraints and names the bad column instead of failing at commit.</li>
+  <li><code>db/ingest.py</code> <code>ingest_scored_rows()</code> looks up the
+  report by <code>sha256</code>. A known report reuses its source and only
+  widens <code>extraction_engine</code> / <code>verification_model</code>;
+  a new one gets a <code>sources</code> and <code>raw_documents</code> row.</li>
+  <li>Each row is matched on <code>(ioc_type, normalised)</code>. A new
+  value is inserted; an existing one gets its score, components and
+  <code>scored_at</code> updated. A sighting is added if this report has
+  not sighted it before. Then <code>refresh_seen_dates()</code> sets each
+  touched indicator's <code>first_seen</code> / <code>last_seen</code> to the
+  earliest and latest publish dates of the reports that sighted it.</li>
+  <li><code>raise_flags()</code> writes the findings, then the caller
+  commits.</li>
+  <li><code>rescore_from_db()</code> recomputes timeliness and accuracy for
+  every indicator in the database and commits again.</li>
+</ol>
+<p>The ingest is idempotent per report: re-ingesting the same file adds no
+rows, though it does refresh scores.</p>
+
+<h3>Other writes</h3>
+<ul>
+  <li><strong>Dashboard edits</strong> (<code>PATCH /api/indicators/{id}</code>) set fields directly, without <code>conformance.py</code>. Only the CHECK constraints apply, so <code>ioc_type</code> can be set to anything. A hand-edited <code>quality_score</code> is overwritten by the next rescore; an edited <code>confidence</code> stays.</li>
+  <li><strong>Dashboard deletes</strong>: deleting an indicator removes its sightings and flags. Deleting a report removes its raw document and sightings; indicators seen only in that report stay, with no sightings. Their first/last seen dates are re-derived from the reports that remain.</li>
+  <li><strong>Flag review</strong>: the dashboard changes <code>quality_flags.status</code>.</li>
+  <li><strong>Rescore</strong> from the dashboard's Configuration page, same as step 5 above.</li>
+  <li><strong>Seeding</strong>: <code>python -m threatlens.db.seed</code> deletes and repopulates <code>scoring_config</code> and <code>allowlist</code> in the database named by <code>threatlens.conf [database] default</code>. That discards any <code>scoring_config</code> history.</li>
+</ul>
+<p><code>db/ingest.py</code> also keeps an older, unscored path
+(<code>ingest_extractions()</code>, <code>ingest_extraction_file()</code>)
+that the pipeline no longer uses.</p>
+
+<h3>Reading it</h3>
+<p>The dashboard reads through the same models. For raw access, the
+dashboard's <code>/db-browser/</code> (Datasette, read-only) shows every
+table, and any SQLite client can open the files directly; close it before
+running an ingest.</p>
+
+<h2 id="creating">Creating a database</h2>
+<p><code>threatlens init</code> does this as part of setup. By hand:</p>
+<pre><code>python -m threatlens.db.migrate                   # creates/upgrades threatlens.conf's database in db/
+python -m threatlens.db.migrate db/other.db       # ...or any other file (parent folders are created)
+python -m threatlens.db.seed                      # scoring_config + allowlist
+
+# or, for an evaluation run into any file (migrates, seeds if empty, ingests):
+python .dev_tools/run_ex_pipeline.py --db-path db/exN_threatlens.db --batch 1/3</code></pre>
+<p><code>threatlens.db.migrate</code> runs the Alembic migrations shipped
+inside the package (<code>src/threatlens/migrations/</code>) with no
+<code>alembic.ini</code>, so it works the same from a repo checkout and from
+a pip install. In code: <code>threatlens.db.migrate.upgrade(path)</code>,
+which <code>run_ex_pipeline.py</code> uses. From a checkout, the plain
+<code>alembic</code> CLI also works from the repo root through the root
+<code>alembic.ini</code> (URL <code>db/threatlens.db</code>):</p>
+<pre><code>alembic upgrade head
+alembic current
+alembic revision --autogenerate -m "describe the change"   # new file in src/threatlens/migrations/versions/</code></pre>
+<p>Never use <code>create_all()</code>; the schema's history lives in the
+migrations. <code>models.py</code>'s own <code>__main__</code> still calls
+it, as a leftover, and should not be used.</p>
+
+<h2>Migrations</h2>
+<table>
+<thead><tr><th>Revision</th><th>Version</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td><code>7797ff2fc9e2</code></td><td>v1.4</td><td>Initial schema: all seven tables</td></tr>
+<tr><td><code>b246eb301c95</code></td><td>v1.5</td><td><code>sources.extraction_engine</code> (with CHECK) and <code>sources.verification_model</code>. Existing reports are left NULL.</td></tr>
+</tbody>
+</table>
+<p>The migrations are part of the package (<code>threatlens.migrations</code>,
+with the revisions as modules in <code>versions/</code>), so a new revision
+file ships in the next build with no packaging change.
+(They were previously in a top-level <code>migrations/</code> folder that
+the wheel did not include.)</p>
+<p>Alembic is configured with <code>render_as_batch=True</code>, because SQLite's
+<code>ALTER TABLE</code> cannot drop or alter columns or add constraints, so
+Alembic rebuilds the table instead. <strong>Take care with that on parent
+tables.</strong> Foreign keys are switched on for every connection,
+including Alembic's, and rebuilding drops the old table, which would
+cascade-delete every child row. The v1.5 migration avoids this by using
+plain <code>ALTER TABLE … ADD COLUMN</code> instead of a batch rebuild; do
+the same for any change to <code>sources</code> or
+<code>indicators</code>.</p>
+
+<h2 id="sqlite">Why SQLite, and what that costs</h2>
+<p>SQLite needs no installation, no admin rights on managed lab machines and
+no server process, and a database is one portable file, which makes client
+handover simple. PostgreSQL is the documented production target. Queries go
+through the SQLAlchemy ORM, but the schema itself has SQLite-specific
+parts a port would need to replace:</p>
+<ul>
+  <li>the <code>ctx_malware</code> computed column (<code>json_extract</code>);</li>
+  <li>the <code>json_valid()</code> CHECK constraints;</li>
+  <li><code>datetime('now')</code> column defaults;</li>
+  <li>the connection PRAGMAs below.</li>
+</ul>
+<p>SQLite behaviours the code works around:</p>
+<ul>
+  <li><strong>Foreign keys are off by default.</strong> A connect listener in <code>models.py</code> runs <code>PRAGMA foreign_keys = ON</code> on every connection. Without it, nothing cascades and nothing fails, silently.</li>
+  <li><strong>WAL mode</strong> (<code>PRAGMA journal_mode = WAL</code>) lets the dashboard keep reading while an ingest writes. There is still one writer at a time, so a client holding a write transaction open causes "database is locked".</li>
+  <li><strong>Type affinity, not enforcement.</strong> SQLite will store a string in an INTEGER column, so the CHECK constraints and <code>conformance.py</code> carry the integrity burden.</li>
+</ul>
+
+<h2>Database files</h2>
+<p>Database files live in the database folder (<code>db/</code> in a
+checkout, <code>&lt;data folder&gt;/db/</code> when pip-installed; see
+<a href="cli_rundown.html#locations">where files live</a>). In a checkout
+they are gitignored (<code>*.db</code>,
+<code>-shm</code>, <code>-wal</code>): the migrations are the recipe, not the
+data. Several can sit side by side: <code>threatlens.db</code>, the
+evaluation runs <code>ex2</code>–<code>ex4_threatlens.db</code>, and test
+copies. The dashboard opens <code>threatlens.conf [database] default</code>
+at startup and can switch between them at runtime.</p>
+
+<h2 id="known-issues">Known issues</h2>
+<ul>
+  <li><strong>Databases built before 13 Oct 2026</strong> have <code>first_seen</code>
+  empty and <code>last_seen</code> set in ingest order (since fixed).
+  <code>python .dev_tools/backfill_seen_dates.py db/&lt;file&gt;.db</code>
+  repairs them and rescores as of the original scoring time. ex2, ex3, ex4
+  and <code>threatlens.db</code> have been backfilled.</li>
+  <li><strong>Dashboard edits bypass validation</strong>, and deleting a report
+  can leave indicators with no sightings (see <em>Other writes</em>).</li>
+  <li><strong>The <code>allowlist</code> table is not read during ingest</strong>, so
+  editing it has no effect yet.</li>
+</ul>
+
+<h2>Design lineage</h2>
+<ul>
+  <li><strong>STIX 2.1</strong>: indicator typing (observables vs. context), 0–100 confidence, and the Sighting concept. The schema records <code>first_seen</code> / <code>last_seen</code> rather than STIX's <code>valid_from</code> / <code>valid_until</code>.</li>
+  <li><strong>MISP</strong>: the event→attribute hierarchy became sources→sightings; warninglists became <code>allowlist</code>.</li>
+  <li><strong>OpenCTI</strong>: the reference point for what is deliberately left out: no actor or campaign graph, no relationships between indicators, no enrichment.</li>
+  <li><strong>Computers &amp; Security (2024)</strong>, "Improving quality of indicators of compromise using STIX graphs": the quality framework and Table 7 bands behind <code>quality_score</code> and <code>scoring_config</code>.</li>
+</ul>
+
+<h2>Source</h2>
+<ul>
+  <li><code>src/threatlens/db/models.py</code>: the schema and the connection PRAGMAs</li>
+  <li><code>src/threatlens/db/ingest.py</code>: document identity, source creation, the scored-row write path</li>
+  <li><code>src/threatlens/db/conformance.py</code>: type vocabulary, value conversion and row validation</li>
+  <li><code>src/threatlens/db/seed.py</code>: <code>scoring_config</code> and <code>allowlist</code> reference data</li>
+  <li><code>alembic.ini</code> (repo root): Alembic CLI configuration for a checkout</li>
+  <li><code>src/threatlens/migrations/versions/</code>: migration history; <code>src/threatlens/migrations/env.py</code>: batch mode; <code>src/threatlens/db/migrate.py</code>: runs them (<code>python -m threatlens.db.migrate</code>)</li>
+</ul>
+
+</div>
+</body>
+</html>

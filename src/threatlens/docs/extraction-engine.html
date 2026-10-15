@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extraction Engine — ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+    --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 24px;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.2em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  tr:nth-child(even) { background: #fbfcfd; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 1.5em;
+  }
+  .stub-notice {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    background: var(--code-bg);
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: 1.5em 0 2em;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+    tr:nth-child(even) { background: #10151c; }
+  }
+  h3 { font-size: 1.05rem; margin-top: 1.8em; }
+  @media (max-width: 600px) { .wrap { padding: 32px 16px 64px; } }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a href="extraction-engine.html" aria-current="page">Extraction Engine</a>
+    <a href="database-schema.html">Database &amp; Schema</a>
+    <a href="quality-checker.html">Quality Checker</a>
+    <a href="dashboard-webui.html">Dashboard / Web UI</a>
+    <a href="cli_rundown.html">CLI</a>
+    <a href="evaluation-reports.html">Evaluation Reports</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<span class="badge">ThreatLens · ZEIT3118 Capstone</span>
+<h1>Extraction Engine</h1>
+
+<p>The extraction engine turns a CTI report (PDF or plain text) into a typed
+set of candidate indicators of compromise, plus document metadata. It works
+in two stages that are kept strictly apart:</p>
+<ul>
+  <li>a <strong>candidate stage</strong>: deterministic regex rules decide
+  <em>where</em> something worth looking at is in the text, and</li>
+  <li>a <strong>verification stage</strong>: a verifier reads each candidate's
+  surrounding text and decides whether it is an IoC the report's authors are
+  actually presenting.</li>
+</ul>
+<p>Verification classifies; it never extracts. Every value in the output was
+found by the regex stage at a known offset, so a verifier cannot invent an
+indicator, and the <code>start</code>/<code>end</code> offsets can be
+trusted.</p>
+
+<h2>Two engines, one front end</h2>
+
+<p>There are two engines, chosen per run as <code>llm</code> (the default) or
+<code>python</code>. They are two modules, but not two separate
+extractors:</p>
+
+<pre><code>ioc_extract_llm_fs.py                         ioc_extract_python.py
+┌──────────────────────────────────────┐
+│ DocumentReader     (read PDF / text) │
+│ MetadataExtractor  (title, date, …)  │ ◀──── imports ─── steps 1–3 and the
+│ CTIExtractor       (regex candidates)│                   domain model
+│ IoCExtractionResult (output object)  │
+├──────────────────────────────────────┤      ┌───────────────────────────┐
+│ DocumentProfiler + LLMVerifier       │      │ HeuristicVerifier         │
+│ (Ollama)                             │      │ (local regex rules)       │
+└──────────────────────────────────────┘      └───────────────────────────┘</code></pre>
+
+<p><code>ioc_extract_llm_fs.py</code> owns the shared front end: reading,
+metadata, candidate extraction, the domain model (<code>Extraction</code>,
+<code>Verification</code>, <code>IoCExtractionResult</code>, …).
+<code>ioc_extract_python.py</code> imports all of that and adds only its own
+verifier. The consequences:</p>
+<ul>
+  <li>For the same report, both engines produce the <strong>identical candidate
+  set</strong>: same values, same offsets, same candidate ids
+  (<code>stable_id</code>, a hash of category, type and normalised value).
+  Only the verdicts differ.</li>
+  <li>Both return the same <code>IoCExtractionResult</code> object, so every
+  caller handles either engine with the same code.</li>
+  <li>A change to reading or candidate extraction belongs in
+  <code>ioc_extract_llm_fs.py</code>; the python engine picks it up
+  automatically.</li>
+</ul>
+
+<table>
+<thead><tr><th></th><th><code>llm</code> — ioc_extract_llm_fs.py</th><th><code>python</code> — ioc_extract_python.py</th></tr></thead>
+<tbody>
+<tr><td>Verifier</td><td><code>LLMVerifier</code>: an Ollama-hosted model reads each candidate against a written rubric</td><td><code>HeuristicVerifier</code>: keyword and structure rules around each candidate</td></tr>
+<tr><td>Document profile</td><td>Yes: one <code>DocumentProfiler</code> call per report (structure summary + scope)</td><td>No</td></tr>
+<tr><td>Context used</td><td>The candidate's ±300-character excerpt, the document metadata and the structure summary</td><td>A ±140-character window inside that excerpt, plus the document metadata</td></tr>
+<tr><td>Reasons</td><td>The model's own reason and evidence quote for each decision</td><td>A fixed reason string for whichever rule fired</td></tr>
+<tr><td>Needs</td><td>A reachable Ollama server with the model pulled</td><td>Nothing: no network, no settings files</td></tr>
+<tr><td>Speed</td><td>Minutes per report (mean 4m 50s in the <a href="run_report_ex4.html">ex4 run</a>)</td><td>Seconds per report</td></tr>
+<tr><td><code>result.model</code></td><td>The verifier model, e.g. <code>qwen3.5:9b</code></td><td><code>python-heuristics</code></td></tr>
+<tr><td><code>result.scope</code></td><td>A <code>ScopeAssessment</code></td><td><code>None</code></td></tr>
+<tr><td>Role</td><td>The default, and the engine every evaluation run uses</td><td>A deterministic fallback for when no LLM is available</td></tr>
+</tbody>
+</table>
+
+<p>The engines are alternatives, not a pipeline: a single run uses exactly
+one of them. They meet in two places. If a report already in the database is
+ingested again with the other engine, its source is marked
+<code>extraction_engine = 'llm+python'</code> instead of being overwritten.
+And the quality checker can grade how far the two engines agree, but only
+when given both engines' JSON from its own command line (see
+<a href="#handoff">Hand-off</a>).</p>
+
+<h2>Pipeline</h2>
+
+<pre><code>report (.pdf via PyMuPDF, or .txt/.md/.log/.csv/.json)
+      │
+      ▼
+1  DocumentReader.load        text + SHA-256 of the file bytes + embedded PDF metadata
+      │
+      ▼
+2  MetadataExtractor          title, authors, cti_source, source_url, publish_date
+      │                       (conservative heuristics; each field records its method)
+      ▼
+3  CTIExtractor.extract       regex candidates, each with a ±300-char context excerpt
+      │
+      ├──────────── llm engine ────────────┐     ┌──── python engine ────┐
+      ▼                                     │     ▼                       │
+4  DocumentProfiler (1 LLM call)            │  4  HeuristicVerifier       │
+      │  structure summary + scope          │     (per candidate)       │
+      ▼                                     │                           │
+5  LLMVerifier (batched LLM calls)          │                           │
+      │  verdict, confidence, reason,       │                           │
+      │  evidence per candidate             │                           │
+      ▼                                     │                           │
+6  _assess_scope                            │                           │
+      │                                     │                           │
+      ▼                                     ▼                           ▼
+7  IoCExtractionResult  ── metadata, items (candidate + verification), model, scope</code></pre>
+
+<h3>Steps 1–3: the shared front end</h3>
+<ul>
+  <li><strong>Reading.</strong> PDFs are read with PyMuPDF (page text joined
+  in order). Text is normalised to repair artefacts that would break
+  indicators: hyphenated tokens wrapped across lines, and Markdown escape
+  backslashes that split defanged values such as <code>example\[.\]com</code>.
+  The SHA-256 of the file bytes becomes the document's identity in the
+  database.</li>
+  <li><strong>Candidates.</strong> <code>CTIExtractor</code> runs the
+  <code>RULES</code> table (34 typed regex rules: URLs, IPv4/IPv6, hashes,
+  file names and paths, registry keys, e-mail, CVEs, crypto addresses, and
+  more), then dedicated passes for domains, hostnames, scheme-less URLs,
+  e-mail domains and intelligence entities (malware, threat actors,
+  campaigns, tools). Defanged forms (<code>hxxp</code>, <code>[.]</code>,
+  <code>[at]</code>) are matched and refanged. Candidates nested inside a
+  longer candidate are removed, and duplicates (same category, type and
+  normalised value) are collapsed, keeping the one with the longest
+  excerpt.</li>
+  <li><strong>Deliberately over-inclusive.</strong> This stage is built for
+  recall. It is meant to catch everything shaped like an indicator and leave
+  the judgement to verification.</li>
+</ul>
+
+<h3>Steps 4–6: LLM verification</h3>
+<ul>
+  <li><strong>Profile once.</strong> <code>DocumentProfiler</code> sends the
+  title, section headings and the first 2,000 characters (not the whole
+  report). It gets back a short <em>structure summary</em>, such as "section 4
+  lists victim organisations, not attacker infrastructure", and a
+  <em>scope</em> (tactical, operational or strategic) with a reason. A
+  separate profiler model can be configured; by default it is the verifier
+  model.</li>
+  <li><strong>Verify in batches.</strong> <code>LLMVerifier</code> sends
+  <code>batch_size</code> candidates per request
+  (<code>threatlens.conf [llm] batch_size</code>; 5 by default, set by
+  <code>threatlens-calibrate</code>). Each request carries the document metadata, the structure
+  summary, and for each candidate its type, value, attributes and
+  excerpt. The model never sees the whole document. It answers under a
+  written rubric: citations, vendor pages and benign examples are
+  <code>rejected</code>; malware names, actors, CVEs and ATT&amp;CK
+  techniques are <code>context_entity</code>; a value in the report's own IOC
+  table is <code>confirmed_ioc</code>; and so on. Each decision comes with a
+  confidence, a reason and an evidence quote.</li>
+  <li><strong>Deterministic, structured output.</strong> Requests use
+  Ollama's JSON-schema structured output at temperature 0 with thinking
+  disabled, so the same model, settings and input give the same answer.
+  The ex3 and ex4 runs produced identical results (see the
+  <a href="llm_analysis_deviation_report.html">deviation report</a>).</li>
+  <li><strong>Retries.</strong> A response is only checked structurally:
+  valid JSON, and exactly one decision per candidate id. A failing batch is
+  retried up to <code>max_retries</code> times; a truncated response grows
+  <code>num_predict</code> and <code>num_ctx</code> before the retry. If a
+  batch still fails, it is split in half and each half is retried on its own
+  (recursively), since a failure that repeats at temperature 0 is
+  deterministic and only a different request routes around it. Only a
+  single candidate that still fails aborts the report.</li>
+  <li><strong>Scope assessment.</strong> <code>_assess_scope</code> combines
+  the profile's scope with flags taken from the accepted candidates:
+  tactical content (network/host/e-mail observables), operational content
+  (behaviour or TTPs) and strategic content (the profile itself).</li>
+</ul>
+
+<h3>Step 4 (python engine): heuristic verification</h3>
+<p><code>HeuristicVerifier</code> checks rules in a fixed order and stops at
+the first that fires:</p>
+<ol>
+  <li>intelligence entities → <code>context_entity</code> (or
+  <code>rejected</code> in pure reference context);</li>
+  <li>behaviour descriptions → <code>context_entity</code>;</li>
+  <li>reference wording just before the value, or a match on the report's own
+  source → <code>rejected</code>;</li>
+  <li>per-type rules for e-mail addresses, hashes, host artefacts and network
+  observables, using an IOC-section heading, malicious-context words
+  (<code>MALICIOUS_CONTEXT_RE</code>), malicious actions
+  (<code>MALICIOUS_ACTION_RE</code>), defanging and benign wording;</li>
+  <li>otherwise <code>uncertain</code>.</li>
+</ol>
+
+<h3>Why regex alone isn't enough, and why the LLM is the default</h3>
+<p>Left unchecked, the candidate stage produces plenty of noise: a citation
+URL, a vendor's own domain, an ATT&amp;CK name that looks like a cryptonym, a
+victim's domain in a targets table, a signed binary mentioned only because
+malware abused it. Whether such a value is an IoC depends on what the
+surrounding sentence, or the report's structure, says. Matching the string
+itself cannot settle it.</p>
+<p>The python verifier narrows the gap with keyword rules one layer up, but
+with the same limits:</p>
+<ul>
+  <li><strong>No semantic reasoning.</strong> "No record of malicious activity
+  was found at example.com" contains the same trigger words as a real
+  detection.</li>
+  <li><strong>No document-level context.</strong> Without a profile it cannot
+  tell a victims table from an infrastructure table, or a side-loaded signed
+  binary from the payload dropped beside it.</li>
+  <li><strong>No justification.</strong> A keyword hit produces a status
+  directly, with no explanation in terms of the actual sentence.</li>
+</ul>
+<p>The LLM reads the excerpt against a written rubric and the document
+profile, and explains each decision. That is why it is the default; the
+python engine is there for when no LLM is available.</p>
+
+<h3>The verdict is final within the engine</h3>
+<p><code>analyse_document()</code> attaches each verifier decision to its
+candidate unchanged. Nothing in the extraction engine adjusts, blends or
+second-guesses a verdict. Downstream, the
+<a href="quality-checker.html">quality checker</a> can still reject a
+candidate on structural or STIX grounds whatever the verdict, but it does
+not re-run verification.</p>
+
+<h2>Where it is called from</h2>
+
+<p>Every caller goes through one function per engine,
+<code>analyse_document()</code>:</p>
+
+<table>
+<thead><tr><th>Entry point</th><th>Calls the engine via</th><th>What happens to the result</th></tr></thead>
+<tbody>
+<tr><td><a href="cli_rundown.html"><code>threatlens</code></a> (CLI)</td><td><code>cli.py</code></td><td>Summary printed; with <code>-o</code>, written as JSON. No database.</td></tr>
+<tr><td>Dashboard Ingest page (file queue and "Download from URL")</td><td><code>ingest_jobs.py</code> starts <code>python -m threatlens.dashboard.ingest_worker</code>, one process per report</td><td>Quality checks, written to the active database, rescored</td></tr>
+<tr><td><code>threatlens-ingest</code></td><td><code>ingest_worker.py</code>, run directly in the terminal</td><td>Same as the Ingest page</td></tr>
+<tr><td><code>.dev_tools/run_ex_pipeline.py</code> (evaluation runs)</td><td><code>ingest_worker.run()</code>, per report in a batch</td><td>Same as the Ingest page</td></tr>
+<tr><td><code>python -m threatlens.extractors.ioc_extract_llm_fs</code> / <code>…ioc_extract_python</code></td><td>Each module's own <code>main()</code></td><td>Developer tool: JSON output, with extra flags (<code>--no-llm</code>, <code>--keep-duplicates</code>, per-setting overrides). The llm module reads <code>threatlens.conf</code> (or <code>--config FILE</code>) like the CLI, with each flag overriding its setting; the python module reads no settings.</td></tr>
+</tbody>
+</table>
+
+<h3>Why there are two routes</h3>
+<ul>
+  <li><strong>The CLI is for looking, not storing.</strong> It runs only the
+  extraction stage, so a change to the extractor, or the difference between
+  the two engines, can be examined on one report without creating database
+  rows. Its JSON output is a complete record of what the engine decided.</li>
+  <li><strong>The web UI is for ingesting.</strong> Extraction is only the
+  first of four steps, and the Ingest page needs the other three. There is
+  one implementation of that pipeline, <code>ingest_worker.py</code>. The
+  Ingest page, <code>threatlens-ingest</code> and the batch runner all use
+  it, so a database built from the terminal matches one built from the
+  browser.</li>
+  <li><strong>The dashboard runs the engine in a separate process.</strong>
+  An LLM run takes minutes. In a worker process it can be cancelled by
+  killing the process, a crash in the extractor cannot take the dashboard
+  down, and the worker's verbose log can be streamed to the page live.
+  Jobs run one at a time because every job writes the same SQLite file and
+  one LLM job already keeps Ollama busy.</li>
+  <li><strong>The engine has no command-line or web code of its own in
+  either route.</strong> Both callers pass in already-resolved settings and
+  get back a Python object, so the engine stays testable on its own.</li>
+</ul>
+
+<h3>Settings</h3>
+<p>The python engine reads no settings. For the llm engine, both
+<code>cli.py</code> and <code>ingest_worker.py</code> take every setting from
+<code>threatlens.conf</code>, with built-in defaults for anything it leaves
+out: the Ollama URL (<code>[ollama]</code>), the verifier and profiler models
+(<code>[models]</code>) and the performance tuning (<code>[llm]</code>: batch
+size, timeouts, context sizes, retries). <code>extractors/calibration.py</code>
+(<code>threatlens-calibrate</code>) benchmarks the server and writes
+<code>[ollama]</code>, the verifier model and <code>[llm]</code>; the
+dashboard's Configuration page edits the URL and models and keeps
+<code>[llm]</code>. (These used to be split with a separate
+<code>llm_calibration.conf</code>, looked up in the current directory by the
+CLI but in the repo root by the worker; there is now one file and one
+lookup.) Before an llm run, both callers print a warning for each
+<a href="cli_rundown.html#setup-check">setup step</a> not yet done. See
+<a href="cli_rundown.html">CLI</a> for the full table and
+<a href="cli_rundown.html#calibrate">calibration</a>.</p>
+
+<h2 id="handoff">Hand-off</h2>
+
+<p>The engine's output is always an <code>IoCExtractionResult</code>. How it
+leaves the engine depends on the caller.</p>
+
+<h3>From the CLI: JSON, on request</h3>
+<pre><code>IoCExtractionResult ──to_dict()──▶ JSON file (-o)
+                                     │  optional, by hand:
+                                     ▼
+                     python -m threatlens.quality.quality_checker out.json [--compare other.json]
+                                     │  load_run() → check_report()
+                                     ▼
+                              printed quality report (no database)</code></pre>
+<p>The JSON contains <code>metadata</code>, <code>verification_model</code>,
+<code>scope</code>, <code>summary</code>, every candidate in
+<code>indicators</code> (with its verification), and
+<code>accepted_by_category</code>. The quality checker reads this format
+directly. Giving it both engines' JSON for the same report
+(<code>--compare</code>) is the only place the two verdicts are graded
+against each other. See <a href="cli_rundown.html#chaining">CLI</a>.</p>
+
+<h3>From the web UI and <code>threatlens-ingest</code>: in memory</h3>
+<pre><code>IoCExtractionResult
+      │  quality_checker.run_from_payload(result)   (calls result.to_dict(); no file)
+      ▼
+ExtractionRun ──▶ check_report([run], policy from the database's scoring_config)
+      │
+      ▼
+QualityReport ──▶ persist_report() ──▶ sources, raw_documents, indicators,
+      │                                 sightings, quality_flags   (commit)
+      ▼
+rescore_from_db() ──▶ timeliness / accuracy refreshed for stored indicators (commit)</code></pre>
+<p>The worker never writes the result to disk. It runs one engine, so
+<code>check_report</code> gets a single run and every candidate's agreement
+grade is <code>single_verifier</code>. What travels where:</p>
+<table>
+<thead><tr><th>From the extraction result</th><th>Ends up as</th></tr></thead>
+<tbody>
+<tr><td><code>metadata.file_sha256</code></td><td>The document's identity (<code>raw_documents.sha256</code>); re-ingesting the same file reuses its source</td></tr>
+<tr><td><code>metadata</code> (title, date, URL, …)</td><td><code>sources.raw_metadata</code>, <code>sources.url</code>; <code>publish_date</code> drives timeliness</td></tr>
+<tr><td><code>model</code></td><td><code>sources.verification_model</code>, and <code>sources.extraction_engine</code> (<code>llm</code> / <code>python</code>, widened to <code>llm+python</code> on re-ingest with the other engine)</td></tr>
+<tr><td>Each candidate's value, type, corrected type, offsets</td><td>An <code>indicators</code> row and a <code>sightings</code> row, if it survives the quality checks</td></tr>
+<tr><td>Each candidate's <code>context</code> excerpt</td><td><code>sightings.excerpt</code>, one per report. The first report's excerpt is also kept in <code>indicators.context</code>, alongside the structured context the quality checker builds from the report's context entities (see <a href="database-schema.html">Database &amp; Schema</a>).</td></tr>
+<tr><td>Verdict + verdict confidence</td><td>Translated into <code>indicators.confidence</code> (maliciousness) and kept in <code>score_components</code></td></tr>
+<tr><td><code>scope</code>, <code>summary</code></td><td>Not stored. The quality checker works out the report's audience from the surviving candidates instead, though relevance currently scores 3 for every indicator (see <a href="quality-checker.html">Quality Checker</a>).</td></tr>
+</tbody>
+</table>
+<p>See the <a href="quality-checker.html">Quality Checker</a> for what happens
+to each candidate after hand-off.</p>
+
+<h2>Source</h2>
+<ul>
+  <li><code>src/threatlens/extractors/ioc_extract_llm_fs.py</code>: shared front end, domain model, LLM engine (<code>analyse_document</code>, <code>DocumentProfiler</code>, <code>LLMVerifier</code>)</li>
+  <li><code>src/threatlens/extractors/ioc_extract_python.py</code>: python engine (<code>HeuristicVerifier</code>, <code>analyse_document</code>)</li>
+  <li><code>src/threatlens/extractors/calibration.py</code>: benchmarks an Ollama server and writes the <code>[llm]</code> section of <code>threatlens.conf</code> (<code>threatlens-calibrate</code>)</li>
+  <li><code>src/threatlens/cli.py</code>: the <code>threatlens</code> command</li>
+  <li><code>src/threatlens/dashboard/ingest_worker.py</code>: the ingest pipeline (<code>threatlens-ingest</code>); <code>ingest_jobs.py</code>: the dashboard's queue around it</li>
+</ul>
+
+</div>
+</body>
+</html>

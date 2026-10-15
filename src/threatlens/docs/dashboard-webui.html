@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard / Web UI — ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+    --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 24px;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.2em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  tr:nth-child(even) { background: #fbfcfd; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 1.5em;
+  }
+  .stub-notice {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    background: var(--code-bg);
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: 1.5em 0 2em;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+    tr:nth-child(even) { background: #10151c; }
+  }
+  h3 { font-size: 1.05rem; margin-top: 1.8em; }
+  h4 { font-size: 0.95rem; margin: 1.4em 0 0.4em; }
+  @media (max-width: 600px) { .wrap { padding: 32px 16px 64px; } }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a href="extraction-engine.html">Extraction Engine</a>
+    <a href="database-schema.html">Database &amp; Schema</a>
+    <a href="quality-checker.html">Quality Checker</a>
+    <a href="dashboard-webui.html" aria-current="page">Dashboard / Web UI</a>
+    <a href="cli_rundown.html">CLI</a>
+    <a href="evaluation-reports.html">Evaluation Reports</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<span class="badge">ThreatLens · ZEIT3118 Capstone</span>
+<h1>Dashboard / Web UI</h1>
+
+<p>The dashboard is a FastAPI application that serves a browser UI directly
+over the live SQLite database. It uses the same SQLAlchemy models the ingest
+pipeline writes to, so what it shows and edits is the live data, not a copy.
+It is where a reader reviews indicators, reports and quality flags, and
+also where reports are uploaded and ingested and where the per-machine
+settings in <code>threatlens.conf</code> are edited.</p>
+
+<h2>Running it</h2>
+<pre><code># with the virtual environment active; needs the dashboard extra:
+#   pip install "threatlens-cti[dashboard]"     (or pip install -e ".[dashboard]" in a checkout)
+threatlens-dashboard                                   # threatlens.conf [dashboard], default http://127.0.0.1:8000
+threatlens-dashboard --host 0.0.0.0 --port 8000 --reload  # reachable from the local network
+
+# or directly
+uvicorn threatlens.dashboard.server:app --reload
+
+# or in the background, from src/threatlens/dashboard/ (repo checkout only)
+./start.sh [PORT]        # also start.bat / start.ps1; stop with stop.*</code></pre>
+<p>The address comes from <code>threatlens.conf [dashboard] host</code> /
+<code>port</code> (set by <a href="cli_rundown.html#init"><code>threatlens init</code></a>),
+default <code>127.0.0.1:8000</code>; <code>--host</code> / <code>--port</code>
+override it. With no <code>threatlens.conf</code> and a terminal, the
+dashboard first offers to run the setup wizard.</p>
+<p>The start scripts run the server in the background, write its PID to
+<code>.server.pid</code> and its output to <code>server.log</code>, refuse to
+start a second copy, and use the repo's <code>.venv</code> when there is one.
+<code>THREATLENS_DASHBOARD_HOST</code> overrides the host. They are not part
+of the pip package; <code>threatlens-dashboard</code> is.</p>
+<p>The pages, their JS/CSS and these documentation pages are package data,
+so a pip-installed copy serves the full UI and <code>/docs/</code> with no
+repo checkout.</p>
+<p>At startup the dashboard checks <code>threatlens.conf</code> (see
+<a href="cli_rundown.html#setup-check">setup check</a>) and prints a
+<code>SETUP:</code> line for each step not yet done: the file is missing, is
+still the unedited template, or its <code>[llm]</code> settings have not been
+calibrated. These are warnings only; the dashboard starts on built-in
+defaults regardless.</p>
+
+<div class="stub-notice"><strong>No authentication.</strong> The default host,
+<code>127.0.0.1</code>, keeps the dashboard to this machine. With
+<code>0.0.0.0</code> (<code>[dashboard] host</code> or <code>--host</code>) it is
+reachable from the local network, and anyone who can reach it can edit and
+delete database rows, upload files and change the configuration; the
+dashboard prints a warning at startup when it listens on all interfaces.
+The checkout's <code>start.*</code> scripts still default to
+<code>0.0.0.0</code> (<code>THREATLENS_DASHBOARD_HOST</code> changes it).</div>
+
+<h3>Which database it uses</h3>
+<p>At startup the dashboard opens the database folder
+(<code>db/</code> in a checkout, <code>&lt;data folder&gt;/db/</code> when
+pip-installed; see <a href="cli_rundown.html#locations">where files live</a>) +
+<code>threatlens.conf [database] default</code> (else
+<code>threatlens.db</code>). <code>THREATLENS_DB_URL</code> or
+<code>THREATLENS_DB_FILE</code> override that. The header's
+<strong>Database</strong> dropdown switches to any other <code>.db</code> file
+in that folder at runtime, without a restart. Every page, the API, the
+database browser and newly queued ingest jobs follow the switch.</p>
+
+<h2>Pages</h2>
+
+<h3>Main page (<code>/</code>)</h3>
+<p>A header with links to the other pages, the database dropdown and four
+stat cards: indicator count, report count, open quality flags and mean
+quality score. Below it, three tabs:</p>
+<table>
+<thead><tr><th>Tab</th><th>Shows</th><th>Actions</th></tr></thead>
+<tbody>
+<tr><td><strong>Indicators</strong></td><td>Every stored indicator: type, value, confidence, quality score with its grade badge, sighting count, extraction engine, last seen. Paged (100 per page), sorted on the server so a sort spans every page.</td><td>Search by value; filter by type, quality-score range and engine (<code>llm</code>, <code>python</code>, unknown); sort by any column. <strong>Edit</strong> any field in a form; <strong>Delete</strong> (with its sightings and flags). Click a row for the indicator page.</td></tr>
+<tr><td><strong>Reports</strong></td><td>Every ingested report: title (from its metadata, not the filename), mean quality score, filename, type, reliability, engine, indicator count, ingest time</td><td>Open the report page; <strong>Delete</strong> the report</td></tr>
+<tr><td><strong>Quality Flags</strong></td><td>Flags raised by the quality checker: indicator, flag type, dimension, severity, detail, status. Newest first; defaults to open flags.</td><td>Filter by status (open, resolved, dismissed); <strong>Resolve</strong> or <strong>Dismiss</strong> a flag</td></tr>
+</tbody>
+</table>
+<p>An indicator's engine is not stored on the indicator: it is the
+combination of the engines of the reports it was seen in, so a value seen by
+both reads <code>llm+python</code>.</p>
+
+<h3>Report page (<code>/reports/{id}</code>)</h3>
+<p>The report's metadata and quality summary, then a table of its indicators
+with the four dimension scores, quality score, confidence and flags. Under
+it is <strong>the original PDF</strong>, rendered page by page on the server with
+PyMuPDF, with every place an indicator appears highlighted. Rows and
+highlights link both ways: click a row to jump to the value in the PDF.
+The <em>In PDF</em> column counts how often each value was found; buttons
+step between pages with hits, and the view fits to page or width.</p>
+<p>The matching is deliberately looser than an exact search, because the
+stored value often differs from the printed one (wrapped URLs and hashes,
+defanged forms). The PDF itself is not in the database:
+<code>raw_documents.file_path</code> points at it in
+<code>docs/database/CTI/</code>, so if the file is moved or deleted the view
+is unavailable but the data is not affected.</p>
+
+<h3>Indicator page (<code>/indicators/{id}</code>)</h3>
+<p>Everything known about one indicator, with each number explained:</p>
+<ul>
+  <li><strong>Confidence breakdown</strong>: the verdict, the verdict confidence, the agreement grade and its multiplier, computed with the quality checker's own functions so the page uses the same arithmetic that produced the number;</li>
+  <li><strong>Quality score breakdown</strong>: each dimension's score, its weight and its share of the total, from <code>score_components</code>;</li>
+  <li><strong>Verifier reasoning and quality flags</strong>;</li>
+  <li><strong>Threat context</strong>: the structured context (actors, malware, campaigns…);</li>
+  <li><strong>Reports containing this indicator</strong>, with their excerpts;</li>
+  <li><strong>Seen alongside</strong>: other indicators that share reports with this one.</li>
+</ul>
+
+<h3>Upload Reports (<code>/uploads</code>)</h3>
+<p>Lists the PDFs in the report folder, the folder ingest reads from
+(<code>docs/database/CTI/</code> in a checkout, gitignored;
+<code>&lt;data folder&gt;/reports/</code> when pip-installed; created on the
+first upload or download), with size, date and whether each is already in the active database
+(matched by path, or by content hash for a renamed copy). Files can be
+uploaded (several at once, optionally overwriting), opened in the browser,
+or removed.</p>
+<p>This page only changes files on disk. Uploading does not ingest, and
+removing a file does not touch the database; that is the Reports tab's
+delete. Uploads are accepted only if the content starts with
+<code>%PDF-</code>, are written under a temporary name and renamed when
+complete, and must be plain filenames (no paths).</p>
+
+<h3>Ingest (<code>/ingest</code>)</h3>
+<p>Runs the <a href="quality-checker.html#invocation">ingest pipeline</a>
+(extract, quality checks, persist, rescore) on chosen reports:</p>
+<ul>
+  <li><strong>Engine</strong>: <code>llm</code> or <code>python</code>, with a status line showing which model the llm engine would use and whether the Ollama server has it. The status chip reads <em>ready</em>, <em>unavailable</em>, or <em>ready, setup incomplete</em> when the server is fine but <code>threatlens.conf</code> is missing, unedited or uncalibrated; the missing steps are listed beside it and in the chip's tooltip. The same warnings appear as <code>[WARN]</code> lines at the top of each job's log.</li>
+  <li><strong>Log detail</strong>: verbosity 0–3 (default 2), i.e. the extractor's <code>-v</code> level.</li>
+  <li><strong>Not yet ingested</strong>: the report files not in the active database; pick some and queue them.</li>
+  <li><strong>Download from URL</strong>: fetches a PDF into the report folder and queues it.</li>
+  <li><strong>Queue</strong>: each job's status (queued, running, done, failed, cancelled), progress estimate and live log; cancel one or all, clear finished ones.</li>
+</ul>
+<p>How the queue works:</p>
+<ul>
+  <li>Jobs run <strong>one at a time</strong>, each in its own <code>ingest_worker.py</code> process. Every job writes the same SQLite file, and one LLM job already keeps Ollama busy. A separate process means a slow job can be cancelled by killing it, and an extractor crash cannot take the dashboard down.</li>
+  <li>Progress comes from the worker's machine-readable <code>@@progress</code> lines and, during LLM verification, its batch counter, which is where nearly all the time goes. The log is polled from the page while the job runs.</li>
+  <li>Jobs are <strong>pinned to the database that was active when queued</strong>, so switching databases mid-run does not redirect them.</li>
+  <li>The queue and download list live <strong>in memory</strong>: restarting the dashboard drops queued jobs and kills the running worker. The database stays consistent, because a report is only committed after its extraction and quality checks finish.</li>
+</ul>
+<p>URL downloads are locked down because the dashboard may be reachable from
+the network: http(s) on ports 80/443 only, no credentials in the URL, no
+proxies, and every connection, including each redirect hop, must go to an
+address the server has itself resolved and checked to be publicly
+routable. A response is accepted only if it starts with
+<code>%PDF-</code>.</p>
+
+<h3>Configuration (<code>/config</code>)</h3>
+<p>Views and edits <code>threatlens.conf</code>, the same file the CLI and the
+ingest worker read:</p>
+<table>
+<thead><tr><th>Section</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td>Ollama</td><td>Server URL. The model pickers query the server for its installed models.</td></tr>
+<tr><td>Models</td><td>Verifier model; profiler model (blank = same as verifier)</td></tr>
+<tr><td><em>Dashboard address</em> (<code>[dashboard]</code>)</td><td>Not edited here; set by <code>threatlens init</code> or in the file, used at the next start. A save keeps it.</td></tr>
+<tr><td><em>Data folder</em> (<code>[paths]</code>)</td><td>Not edited here; set <code>data_dir</code> in the file or <code>THREATLENS_HOME</code>, then restart. The page shows the database and report folders in use, and a save keeps the setting.</td></tr>
+<tr><td><em>LLM tuning</em> (<code>[llm]</code>)</td><td>Not edited here. Batch size, context window, timeouts and retries are written by <code>threatlens-calibrate</code> (or by hand); a save from this page keeps them, and keeps the <code>[calibration]</code> record.</td></tr>
+<tr><td>Database</td><td>Default database, chosen from the files in the database folder. Applies at the next dashboard start; the header dropdown switches the live one.</td></tr>
+<tr><td>Quality weights</td><td>The four dimension weights. Each 0–1, and they must sum to 1.00. These override the database's <code>scoring_config</code> weights.</td></tr>
+<tr><td>Verifier agreement</td><td>The confidence multiplier per agreement grade. An ingest always uses <code>single</code>.</td></tr>
+</tbody>
+</table>
+<p>A <strong>Setup incomplete</strong> box at the top lists anything the
+<a href="cli_rundown.html#setup-check">setup check</a> found: no file yet
+(defaults are shown, and saving creates it), the unedited template, or no
+calibration. Saving from this page counts as reviewing the template, even
+with its values unchanged; calibration needs <code>threatlens-calibrate</code>.</p>
+<p>Values are validated before saving, and saved changes apply to the next
+ingest without a restart. <strong>Re-score existing indicators</strong> runs
+<code>rescore_from_db()</code> on the active database. Changing weights does
+not change stored scores until that runs or the next ingest does.</p>
+<p>The weights here apply to every database the dashboard or ingest touches.
+Test weights left in place will be applied to the next evaluation run, which
+is what happened to ex3 and ex4 (see the <a href="evaluation-reports.html">evaluation reports</a>).</p>
+
+<h3>Database browser (<code>/db-browser/</code>) and documentation (<code>/docs/</code>)</h3>
+<p>The header's <strong>Database</strong> link opens Datasette, embedded in the
+dashboard, over the active database. It shows every table's raw rows and
+columns, unlike the curated tabs, and is read-only. It follows the database
+dropdown. <strong>Documentation</strong> serves these pages from
+<code>src/threatlens/docs/</code>, which ships with the package.</p>
+
+<h2>Editing and deleting: what changes</h2>
+<table>
+<thead><tr><th>Action</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td>Edit an indicator</td><td>Writes the fields as entered (type, value, normalised, confidence, quality score, first/last seen, context JSON). This bypasses the ingest validation in <code>conformance.py</code>; only the database's CHECK constraints apply, so a bad score or invalid JSON is refused but any <code>ioc_type</code> is accepted. An edited <strong>quality score is overwritten</strong> by the next rescore; an edited confidence stays.</td></tr>
+<tr><td>Delete an indicator</td><td>Removes it with its sightings and quality flags</td></tr>
+<tr><td>Delete a report</td><td>Removes the source, its raw document and its sightings. <strong>Indicators seen only in that report stay</strong>, with no sightings. The PDF file stays on disk. Their first/last seen dates are re-derived from the reports that remain.</td></tr>
+<tr><td>Resolve / dismiss a flag</td><td>Sets <code>quality_flags.status</code>. Nothing else changes; the score is not affected.</td></tr>
+</tbody>
+</table>
+
+<h2>API</h2>
+<p>Every page is static HTML plus a JavaScript module calling a JSON API.
+FastAPI's interactive API docs are at <code>/api/docs</code> and <code>/api/redoc</code>.</p>
+<table>
+<thead><tr><th>Router</th><th>Endpoints</th></tr></thead>
+<tbody>
+<tr><td><code>indicators.py</code></td><td><code>GET /api/indicators</code> (filters: <code>ioc_type</code>, <code>search</code>, <code>min_score</code>, <code>max_score</code>, <code>engine</code>, <code>limit</code> ≤ 1000, <code>offset</code>, <code>sort</code>, <code>order</code>) · <code>GET</code> / <code>PATCH</code> / <code>DELETE /api/indicators/{id}</code></td></tr>
+<tr><td><code>sources.py</code></td><td><code>GET /api/sources</code> · <code>GET</code> / <code>DELETE /api/sources/{id}</code> · <code>GET …/{id}/pdf</code>, <code>…/pdf/highlights</code>, <code>…/pdf/pages/{n}.png?scale=</code></td></tr>
+<tr><td><code>quality_flags.py</code></td><td><code>GET /api/quality-flags?status=</code> · <code>PATCH /api/quality-flags/{id}</code> (any status text is accepted)</td></tr>
+<tr><td><code>stats.py</code></td><td><code>GET /api/stats</code>: counts, open flags, mean score, indicators by type</td></tr>
+<tr><td><code>db_admin.py</code></td><td><code>GET /api/db/files</code> · <code>POST /api/db/select</code></td></tr>
+<tr><td><code>report_files.py</code></td><td><code>GET</code> / <code>POST /api/report-files</code> · <code>GET</code> / <code>DELETE /api/report-files/{filename}</code></td></tr>
+<tr><td><code>ingest.py</code></td><td><code>GET /api/ingest/pending</code>, <code>/engines</code>, <code>/jobs</code>, <code>/jobs/{id}/log?offset=</code>, <code>/downloads</code> · <code>POST /api/ingest/queue</code>, <code>/url</code>, <code>/jobs/{id}/cancel</code>, <code>/cancel-all</code>, <code>/clear</code>, <code>/downloads/{id}/cancel</code>, <code>/downloads/clear</code></td></tr>
+<tr><td><code>config.py</code></td><td><code>GET</code> / <code>PUT /api/config</code> · <code>POST /api/config/ollama-models</code>, <code>/api/config/rescore</code></td></tr>
+</tbody>
+</table>
+<p><code>GET /api/config</code> includes a <code>setup</code> object
+(<code>exists</code>, <code>edited</code>, <code>calibrated</code>,
+<code>ready</code>, <code>warnings</code>), and <code>GET /api/ingest/engines</code>
+includes <code>setup_warnings</code>; the Configuration and Ingest pages show
+them.</p>
+<p>A middleware makes browsers revalidate the pages and their JS/CSS on every
+load, so a code change shows up without a hard refresh.</p>
+
+<h2>Source</h2>
+<ul>
+  <li><code>src/threatlens/dashboard/server.py</code>: the FastAPI app, page routes, mounts (<code>/static</code>, <code>/docs</code>, <code>/db-browser</code>), the <code>threatlens-dashboard</code> entry point</li>
+  <li><code>src/threatlens/dashboard/routes/</code>: the eight API routers above</li>
+  <li><code>src/threatlens/dashboard/db.py</code>: engine/session wiring and runtime database switching</li>
+  <li><code>src/threatlens/dashboard/ingest_jobs.py</code>, <code>ingest_worker.py</code>: the ingest queue and the pipeline worker (<code>threatlens-ingest</code>)</li>
+  <li><code>src/threatlens/dashboard/url_downloads.py</code>: URL downloads and their network safeguards</li>
+  <li><code>src/threatlens/dashboard/pdf_view.py</code>: PDF page rendering and indicator highlighting</li>
+  <li><code>src/threatlens/dashboard/db_browser.py</code>: the embedded Datasette browser</li>
+  <li><code>src/threatlens/dashboard/*.html</code>, <code>static/js/</code>, <code>static/css/</code>: the pages and their per-page scripts (package data, listed in <code>pyproject.toml</code>)</li>
+  <li><code>src/threatlens/docs/</code>: these documentation pages, served at <code>/docs/</code> (package data)</li>
+  <li><code>start.*</code> / <code>stop.*</code>: background start and stop for bash, cmd and PowerShell (checkout only, not packaged)</li>
+</ul>
+
+</div>
+</body>
+</html>

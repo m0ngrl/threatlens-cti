@@ -1,0 +1,40 @@
+.venv/
+archive/
+pgdata/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.db-shm
+*.db-wal
+tests/output/
+src/threatlens/dev_tools/.server.pid
+src/threatlens/dev_tools/server.log
+src/threatlens/dev_tools/db_srv/.server.pid
+src/threatlens/dev_tools/db_srv/server.log
+.dev_tools/.cache/
+
+*.db
+
+
+src/threatlens/dashboard/.server.pid
+src/threatlens/dashboard/server.log
+
+# Per-machine settings, edited by the dashboard (/config). Template: threatlens.conf.example
+threatlens.conf
+
+# Local data, never committed: report PDFs (third-party, the dashboard's
+# upload folder), database backups, run outputs and logs.
+docs/database/CTI/
+db/
+results/
+*.log
+.gui_*
+
+# Editor settings
+.vscode/
+*.code-workspace

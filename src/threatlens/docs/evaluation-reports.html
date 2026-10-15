@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Evaluation Reports — ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+    --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+
+  /* ---- doc ribbon (shared across documentation pages) ---- */
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 24px;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.2em;
+  }
+  h3 {
+    font-size: 1.1rem;
+    margin-top: 1.8em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--code-bg);
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #fbfcfd; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 1.5em;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5em 0;
+  }
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    background: var(--code-bg);
+  }
+  .card h3 {
+    margin: 0 0 0.4em;
+    font-size: 1.02rem;
+  }
+  .card p {
+    margin: 0 0 0.6em;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+  .card .owner {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .status {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    padding: 1px 8px;
+    margin-left: 0.4em;
+    vertical-align: middle;
+  }
+  .status.written { background: #dafbe1; color: #116329; }
+  .status.stub { background: #fff8c5; color: #7d4e00; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+    tr:nth-child(even) { background: #10151c; }
+    .status.written { background: #113a24; color: #56d364; }
+    .status.stub { background: #3a2f06; color: #e3b341; }
+  }
+  .card .meta { font-size: 0.8rem; color: var(--muted); margin: 0 0 0.6em; }
+  .card ul { margin: 0 0 0.6em; padding-left: 1.1em; font-size: 0.92rem; }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a href="extraction-engine.html">Extraction Engine</a>
+    <a href="database-schema.html">Database &amp; Schema</a>
+    <a href="quality-checker.html">Quality Checker</a>
+    <a href="dashboard-webui.html">Dashboard / Web UI</a>
+    <a href="cli_rundown.html">CLI</a>
+    <a href="evaluation-reports.html" aria-current="page">Evaluation Reports</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<span class="badge">ThreatLens · ZEIT3118 Capstone</span>
+<h1>Pipeline Evaluation Reports</h1>
+
+<p>The other pages in this documentation describe how ThreatLens is
+<em>meant</em> to work. The reports here show what it actually does when the
+full pipeline is run over the project's CTI corpus. They give the evidence
+behind claims made elsewhere, such as whether the extraction is reliable,
+how long a run takes and whether repeated runs give the same answer.</p>
+
+<h2>What an evaluation run is</h2>
+
+<p>An evaluation run (labelled <code>ex2</code>, <code>ex3</code>,
+<code>ex4</code>, …) processes the whole corpus of 103 CTI report PDFs in
+<code>docs/database/CTI/</code> (third-party reports, kept locally and not
+distributed with the repository or package; they are named by their ORKL
+archive hash, and <code>.dev_tools/orkl_scraper.py</code> downloads reports
+from that archive) into a fresh database,
+<code>db/exN_threatlens.db</code>. Each report goes through the same steps as
+the dashboard's Ingest page: LLM extraction, quality checks, persistence and
+a rescore of every stored indicator. Runs are driven by
+<code>.dev_tools/run_ex_pipeline.py</code>, which splits the corpus into
+batches, and <code>.dev_tools/run_ex_batches.sh</code>, which chains those
+batches.</p>
+
+<p>To run one now:</p>
+<pre><code>threatlens-calibrate          # once per machine: tune threatlens.conf [llm] for the Ollama server
+python .dev_tools/run_ex_pipeline.py --db-path db/exN_threatlens.db --batch 1/3</code></pre>
+<p>The runner creates the database with the migrations shipped in the
+package (<code>threatlens.db.migrate</code>), seeds the reference tables if
+they are empty, and takes every LLM setting (URL, models, batch size,
+timeouts) and the quality weights from <code>threatlens.conf</code>. Check
+its <code>[quality.weights]</code> first; the worker's <code>[WARN]</code>
+lines flag a missing, unedited or uncalibrated file. The runner is a
+repo-checkout tool and is not part of the pip package.</p>
+
+<p>Because every run starts from an empty database and uses the same input,
+the run databases can be compared directly with each other.</p>
+
+<h2>Reports</h2>
+
+<div class="cards">
+  <div class="card">
+    <h3>ex4 Batch Run Report</h3>
+    <p class="meta">Run 12–13 Oct 2026 · <code>db/ex4_threatlens.db</code></p>
+    <p>A single run from start to finish: configuration, per-batch timing, the
+    funnel from regex candidates to stored indicators, and per-report detail
+    compared with ex3.</p>
+    <ul>
+      <li>103/103 reports, 0 failed, 8h 17m total</li>
+      <li>10,246 candidates → 5,026 LLM-confirmed (49.1%)</li>
+      <li>5,939 unique indicators, 6,239 sightings</li>
+    </ul>
+    <p class="owner"><a href="run_report_ex4.html">Read the report →</a></p>
+  </div>
+  <div class="card">
+    <h3>LLM Analysis Deviation Report</h3>
+    <p class="meta">Compares ex2, ex3 and ex4</p>
+    <p>How far stored results differ between runs over the same corpus. This
+    covers LLM verdicts, confidence, context fields, quality flags and stored
+    values, scored for each report entry.</p>
+    <ul>
+      <li>ex3 ↔ ex4: 0.00% mean deviation (identical)</li>
+      <li>ex2 ↔ ex3/ex4: 0.17%, in 18 of 101 reports</li>
+      <li>Same indicator and sighting set in all three runs</li>
+    </ul>
+    <p class="owner"><a href="llm_analysis_deviation_report.html">Read the report →</a></p>
+  </div>
+</div>
+
+<h2>Reading these reports</h2>
+
+<p>Each report is a snapshot of the code, model and configuration in use
+when it was written. It does not update when the pipeline changes. Check a
+report's run date and configuration before relying on its figures, and
+prefer the newest report when two disagree.</p>
+
+<p>The runs below predate the single configuration file: their LLM batch
+size and timeout came from the former <code>llm_calibration.conf</code>,
+whose settings now live in <code>threatlens.conf [llm]</code>. The pipeline
+itself is unchanged, so the figures stand.</p>
+
+</div>
+</body>
+</html>

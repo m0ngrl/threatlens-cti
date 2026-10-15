@@ -1,0 +1,130 @@
+###############################################################################
+# ThreatLens local configuration
+#
+# Per-machine settings. Editable by hand or from the dashboard's
+# Configuration page (/config); either way the next ingest picks them up
+# without a restart. See src/threatlens/config.py for precedence rules.
+#
+# The LLM calibration tool (python -m threatlens.extractors.calibration)
+# benchmarks the Ollama server and rewrites [ollama], [models] verifier,
+# [llm] and [calibration] here, keeping everything else.
+#
+# threatlens: unedited template - delete this line once the values below suit this
+# machine (a save from the dashboard or threatlens-calibrate removes it).
+###############################################################################
+
+[ollama]
+
+# Ollama server URL.
+#
+#   http://127.0.0.1:11434
+#   http://ollama.example.lan:11434
+#
+url = http://127.0.0.1:11434
+
+
+[models]
+
+# Model that verifies each regex candidate. The evaluation runs use
+# qwen3.5:9b; a smaller model such as qwen3.5:4b is faster on modest
+# hardware but less accurate. Pull it first: ollama pull <model>
+verifier = qwen3.5:9b
+
+# Model that classifies the whole document's scope (strategic, operational,
+# tactical). Leave blank to use the verifier model.
+profiler = 
+
+
+[llm]
+
+# LLM performance tuning. The calibration tool measures the server and
+# writes these; edit by hand if needed. Command-line flags still override.
+
+# Label for the hardware these values suit: cpu-minimal, cpu-low,
+# cpu-balanced, gpu-balanced, gpu-high, or anything (custom).
+profile = uncalibrated
+
+# IoC candidates sent to the LLM per request. Larger batches raise
+# throughput but need more memory. Typical: CPU 2-5, small GPU 5-10,
+# large GPU 10-25.
+batch_size = 5
+
+# Ollama context window, in tokens (2048, 4096, 8192, 16384). Larger values
+# fit more report context but need more memory.
+num_ctx = 4096
+
+# Maximum tokens the model may generate per request. Increase if responses
+# are truncated (512, 1024, 1536, 2048).
+num_predict = 384
+
+# Characters of report context on each side of a candidate (150-600).
+context_chars = 300
+
+# Seconds allowed per Ollama request. Increase for slow CPUs or large models.
+timeout = 600
+
+# Attempts per batch if the LLM returns invalid JSON or truncated output.
+max_retries = 3
+
+# Verification strategy: all, ambiguous-only or deterministic-first.
+# Validated but not yet acted on - every candidate is verified.
+verification_policy = all
+
+
+[paths]
+
+# Folder for the databases (db/) and report files (reports/). Leave blank
+# for the default: the repo itself in a checkout (db/, docs/database/CTI/),
+# otherwise the per-user data folder, e.g. ~/.local/share/threatlens.
+# THREATLENS_HOME overrides this. The dashboard picks a change up on restart.
+data_dir = 
+
+
+[database]
+
+# SQLite file in db/ that the dashboard opens at startup. The dashboard's
+# database dropdown still switches at runtime; THREATLENS_DB_FILE /
+# THREATLENS_DB_URL still override this.
+default = threatlens.db
+
+
+[dashboard]
+
+# Address threatlens-dashboard listens on (its --host / --port override
+# these). 127.0.0.1 keeps it to this machine. 0.0.0.0 makes it reachable
+# from the local network - it has no authentication, so anyone who can reach
+# it can edit and delete data and change this configuration.
+host = 127.0.0.1
+port = 8000
+
+
+[quality.weights]
+
+# Weight of each 0-5 dimension in the composite 0-100 quality_score.
+# Each between 0 and 1; together they must sum to 1.00. Overrides the
+# weights in the database's scoring_config table. Existing indicators keep
+# their old score until re-scored.
+timeliness = 0.25
+accuracy = 0.30
+completeness = 0.25
+relevance = 0.20
+
+
+[quality.agreement]
+
+# Confidence multiplier applied for each grade of agreement between the
+# Python and LLM verifiers (0-1; 1.00 means no discount). An ingest runs one
+# engine, so it always uses "single"; the others apply only when the quality
+# checker's CLI compares both engines' output (--compare).
+agree = 1.00
+weak = 0.90
+single = 0.85
+moderate = 0.75
+strong = 0.50
+
+
+[calibration]
+
+# What the calibration tool measured when it wrote [llm]. Informational
+# only; overwritten on each calibration run.
+# (empty until calibration runs)

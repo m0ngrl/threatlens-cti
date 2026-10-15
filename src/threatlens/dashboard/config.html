@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ThreatLens - Configuration</title>
+<link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+<header class="app-header">
+  <a class="back-link" href="/">&larr; Back to dashboard</a>
+</header>
+
+<main>
+  <h1 class="uploads-title">Configuration</h1>
+  <p class="uploads-intro">
+    Local settings stored in <code id="config-path">threatlens.conf</code>. Saved changes apply to the
+    next ingest, from here or the command line, without a restart.
+    <span id="config-locations"></span>
+    <span id="config-missing" hidden>The file does not exist yet, so built-in defaults are shown; saving
+      creates it.</span>
+  </p>
+  <div id="config-error" class="callout warning" hidden></div>
+  <div id="config-setup" class="callout warning" hidden></div>
+
+  <form id="config-form" novalidate>
+    <section class="detail-card">
+      <h2>Ollama</h2>
+      <p class="detail-note">Server the LLM engine sends verification requests to. Batch size, context
+        window and timeouts are in the file's <code>[llm]</code> section, which the calibration tool writes
+        (<code>python -m threatlens.extractors.calibration</code>); saving here keeps them.</p>
+      <div class="config-row">
+        <label for="cfg-ollama-url">Server URL</label>
+        <input id="cfg-ollama-url" type="url" placeholder="http://127.0.0.1:11434" required />
+        <button id="cfg-ollama-test" class="secondary" type="button">Test connection</button>
+        <span id="cfg-ollama-status" class="status-chip" hidden></span>
+      </div>
+    </section>
+
+    <section class="detail-card">
+      <h2>Models</h2>
+      <p class="detail-note">Test the connection above to pick from the models installed on that server.</p>
+      <div class="config-row">
+        <label for="cfg-model-verifier">Verifier</label>
+        <input id="cfg-model-verifier" list="ollama-models" placeholder="qwen3.5:4b" required />
+        <span class="config-hint">Checks each extracted candidate.</span>
+      </div>
+      <div class="config-row">
+        <label for="cfg-model-profiler">Profiler</label>
+        <input id="cfg-model-profiler" list="ollama-models" placeholder="same as verifier" />
+        <span class="config-hint">Classifies the whole report's scope. Blank uses the verifier model.</span>
+      </div>
+      <datalist id="ollama-models"></datalist>
+    </section>
+
+    <section class="detail-card">
+      <h2>Database</h2>
+      <p class="detail-note">The <code>db/</code> file the dashboard opens at startup. Currently viewing
+        <strong id="cfg-active-db"></strong>; use the header dropdown to switch now.</p>
+      <div class="config-row">
+        <label for="cfg-database">Default database</label>
+        <select id="cfg-database"></select>
+      </div>
+    </section>
+
+    <section class="detail-card">
+      <h2>Quality weights</h2>
+      <p class="detail-note">How much each 0-5 dimension counts toward an indicator's 0-100 quality score.
+        Each between 0 and 1, and together they must total 1.00. Overrides the weights in the database's
+        <code>scoring_config</code> table.</p>
+      <div id="cfg-weights" class="config-grid"></div>
+      <div class="config-total">Total: <strong id="cfg-weight-total">-</strong></div>
+    </section>
+
+    <section class="detail-card">
+      <h2>Verifier agreement</h2>
+      <p class="detail-note">Confidence multiplier applied when the Python and LLM verifiers agree or
+        disagree to each degree. 1.00 means no discount.</p>
+      <div id="cfg-agreement" class="config-grid"></div>
+    </section>
+
+    <div class="config-actions">
+      <button id="cfg-save" type="submit">Save</button>
+      <button id="cfg-reset" class="secondary" type="button">Discard changes</button>
+      <span id="cfg-save-status" class="config-hint"></span>
+    </div>
+  </form>
+
+  <section class="detail-card config-rescore">
+    <div class="card-heading">
+      <h2>Re-score existing indicators</h2>
+      <button id="cfg-rescore" class="secondary" type="button">Re-score</button>
+    </div>
+    <p class="detail-note">Saved weights apply to newly ingested reports. To apply them to indicators
+      already in <strong id="cfg-rescore-db"></strong>, re-score them. This also refreshes timeliness
+      against today's date.</p>
+    <p id="cfg-rescore-status" class="config-hint"></p>
+  </section>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/config.js"></script>
+</body>
+</html>

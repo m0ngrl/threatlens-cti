@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ThreatLens - Indicator</title>
+<link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+<header class="app-header">
+  <a class="back-link" href="/">&larr; Back to dashboard</a>
+</header>
+
+<main>
+  <div class="report-header">
+    <div class="indicator-heading">
+      <div class="meta" id="indicator-kicker"></div>
+      <h1 class="indicator-value" id="indicator-value">Loading...</h1>
+      <div class="filename" id="indicator-normalised"></div>
+      <div class="meta" id="indicator-meta"></div>
+    </div>
+    <div class="indicator-heroes">
+      <div class="report-score-hero" id="indicator-confidence-hero"></div>
+      <div class="report-score-hero" id="indicator-score-hero"></div>
+    </div>
+  </div>
+
+  <div class="detail-facts" id="indicator-facts"></div>
+
+  <div class="detail-grid">
+    <section class="detail-card">
+      <h2>Confidence breakdown</h2>
+      <p class="detail-note">Certainty the indicator is malicious (STIX). Set by the quality checker from the verifiers' verdicts.</p>
+      <div id="confidence-breakdown"></div>
+    </section>
+
+    <section class="detail-card">
+      <h2>Quality score breakdown</h2>
+      <p class="detail-note">How fit the indicator is to use as data. Each dimension is scored 0-5, then weighted.</p>
+      <div id="quality-breakdown"></div>
+    </section>
+  </div>
+
+  <section class="detail-card">
+    <h2>Verifier reasoning &amp; quality flags</h2>
+    <div id="indicator-flags"></div>
+  </section>
+
+  <section class="detail-card">
+    <h2>Threat context</h2>
+    <p class="detail-note">Entities the extractor found in the same report, attached to this indicator as context.</p>
+    <div id="indicator-context"></div>
+  </section>
+
+  <section class="detail-card">
+    <h2>Reports containing this indicator</h2>
+    <div id="indicator-sightings"></div>
+  </section>
+
+  <section class="detail-card">
+    <h2>Seen alongside</h2>
+    <p class="detail-note">Other indicators from the same reports.</p>
+    <div id="indicator-related"></div>
+  </section>
+
+  <section class="detail-card">
+    <details>
+      <summary>Raw stored values</summary>
+      <div id="indicator-raw"></div>
+    </details>
+  </section>
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/indicator_detail.js"></script>
+</body>
+</html>

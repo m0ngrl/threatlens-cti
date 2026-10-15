@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThreatLens Documentation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+    --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+
+  /* ---- doc ribbon (shared across documentation pages) ---- */
+  .doc-ribbon {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.4rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 24px;
+  }
+  .doc-ribbon .brand {
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    margin-right: 0.6rem;
+    white-space: nowrap;
+  }
+  .doc-ribbon .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+  }
+  .doc-ribbon a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .doc-ribbon a:hover { color: var(--fg); }
+  .doc-ribbon a[aria-current="page"] {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+    margin-top: 2.2em;
+  }
+  h3 {
+    font-size: 1.1rem;
+    margin-top: 1.8em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--code-bg);
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #fbfcfd; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 1.5em;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5em 0;
+  }
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    background: var(--code-bg);
+  }
+  .card h3 {
+    margin: 0 0 0.4em;
+    font-size: 1.02rem;
+  }
+  .card p {
+    margin: 0 0 0.6em;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+  .card .owner {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .status {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    padding: 1px 8px;
+    margin-left: 0.4em;
+    vertical-align: middle;
+  }
+  .status.written { background: #dafbe1; color: #116329; }
+  .status.stub { background: #fff8c5; color: #7d4e00; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+    tr:nth-child(even) { background: #10151c; }
+    .status.written { background: #113a24; color: #56d364; }
+    .status.stub { background: #3a2f06; color: #e3b341; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="doc-ribbon">
+  <a class="brand" href="index.html">ThreatLens Docs</a>
+  <div class="links">
+    <a href="index.html" aria-current="page">Overview</a>
+    <a href="extraction-engine.html">Extraction Engine</a>
+    <a href="database-schema.html">Database &amp; Schema</a>
+    <a href="quality-checker.html">Quality Checker</a>
+    <a href="dashboard-webui.html">Dashboard / Web UI</a>
+    <a href="cli_rundown.html">CLI</a>
+    <a href="evaluation-reports.html">Evaluation Reports</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<span class="badge">ThreatLens · ZEIT3118 Capstone</span>
+<h1>ThreatLens Documentation</h1>
+
+<p><strong>ThreatLens</strong> is a prototype Cyber Threat Intelligence
+Indicator Quality Checker. It extracts candidate indicators of compromise
+(IoCs) from CTI reports and feeds, organises them into a structured
+repository, and checks them for quality issues — before handing the reader
+an auditable <code>quality_score</code> for every indicator instead of a raw,
+unfiltered dump.</p>
+
+<p>Capstone project for <strong>ZEIT3118</strong>, UNSW Canberra (ADFA),
+Semester 2 2026, for client Dr. Clemens Sauerwein (University of Innsbruck).</p>
+
+<h2>The problem</h2>
+
+<p>Threat reports are full of candidate indicators — IPs, domains, hashes,
+URLs, file paths — but not everything that looks like an indicator is one,
+and not everything that is one is reported cleanly. The client's brief names
+three quality problems explicitly, and ThreatLens exists to demonstrably
+address them:</p>
+
+<ol>
+  <li><strong>Duplication</strong> — the same underlying intelligence stored
+  more than once, whether as a repeated document or an indicator recorded
+  under multiple representations. (Repeated observation of the <em>same</em>
+  indicator across genuinely independent sources is not duplication — it's
+  corroborating evidence, recorded as multiple sightings.)</li>
+  <li><strong>Missing context</strong> — indicators with no supporting
+  information about what they mean or where they came from.</li>
+  <li><strong>Likely false positives</strong> — values that look like IoCs
+  but aren't: technique idioms, private/non-routable IPs, a report's own
+  self-referencing URL, code fragments mistaken for domains.</li>
+</ol>
+
+<p>Whatever survives that screening is scored against the quality framework
+adapted from the project's research paper, producing a 0–100
+<code>quality_score</code> for every stored indicator, alongside — but never
+conflated with — its 0–100 <code>confidence</code> of being malicious. Four
+of the paper's five dimensions are scored: timeliness, accuracy, completeness
+and relevance. The fifth, consistency, needs an external feed and is deferred
+(see <a href="quality-checker.html">Quality Checker</a>).</p>
+
+<h2>How the pieces fit together</h2>
+
+<pre><code>CTI report (PDF/text)
+      │
+      ▼
+Extraction Engine ──▶ candidate IoCs + context, verified by one engine per
+      │                 run (Qwen LLM by default, or python heuristics)
+      │
+      ├──▶ CLI (threatlens) ──▶ inspect one report: summary or JSON,
+      │                          no database
+      ▼
+Quality Checker ──▶ structural rejection → STIX conformance →
+      │              false-positive screen → dimension scoring
+      ▼
+Database (SQLite via SQLAlchemy + Alembic)
+      │        sources, raw_documents, indicators, sightings,
+      │        quality_flags, allowlist, scoring_config
+      ▼
+Dashboard / Web UI ──▶ browse and triage the data; upload, ingest, configure
+</code></pre>
+
+<p>Reports reach the database through one ingest pipeline: extract, quality
+checks, persist, rescore. The dashboard's Ingest page, the
+<code>threatlens-ingest</code> command and the batch runner behind the
+<a href="evaluation-reports.html">evaluation runs</a> all use it. The
+<code>threatlens</code> CLI stops after extraction: it shows what the engine
+made of a single report, and its JSON output can be fed to the quality
+checker's own command line to inspect that stage as well.</p>
+
+<h2 id="getting-started">Getting started</h2>
+<ol>
+  <li><strong>Install.</strong> <code>pip install "threatlens-cti[dashboard]"</code>,
+  or <code>pip install -e ".[dashboard]"</code> from a checkout (add
+  <code>dev</code> for the tests). The package carries
+  the dashboard's pages, these documentation pages and the database
+  migrations, and installs the <code>threatlens</code>,
+  <code>threatlens-ingest</code>, <code>threatlens-calibrate</code> and
+  <code>threatlens-dashboard</code> commands. The <code>llm</code> engine
+  also needs an <a href="https://ollama.com">Ollama</a> server with the
+  verifier model pulled.</li>
+  <li><strong>Set up.</strong> Run <code>threatlens init</code>. It asks for
+  the data folder, Ollama URL (tested live), models (chosen from those the
+  server has pulled), dashboard address and optional quality weights, writes
+  them to <code>threatlens.conf</code>, creates the database, and can
+  calibrate the LLM settings for your hardware
+  (<a href="cli_rundown.html#init">details</a>). The file lives in the repo
+  root in a checkout and in the per-user config folder when pip-installed
+  (<a href="cli_rundown.html#locations">where files live</a>); re-run the
+  wizard, use the dashboard's Configuration page, or edit the file to change
+  it later.</li>
+  <li><strong>Calibrate</strong>, if skipped during setup:
+  <code>threatlens-calibrate</code> benchmarks the Ollama server and saves the
+  <code>[llm]</code> settings (<a href="cli_rundown.html#calibrate">details</a>).
+  A database can likewise be created or upgraded on its own with
+  <code>python -m threatlens.db.migrate</code>
+  (<a href="database-schema.html#creating">details</a>).</li>
+  <li><strong>Run.</strong> <code>threatlens-dashboard</code> for the web UI
+  (these pages are at <code>/docs/</code>), <code>threatlens-ingest
+  report.pdf</code> to ingest from a terminal, or <code>threatlens
+  report.pdf</code> to inspect one report.</li>
+</ol>
+<p>Until setup and calibration are done, the commands and the dashboard print a
+warning naming the missing step (and, in a terminal, offer to run
+<code>threatlens init</code>) and carry on with built-in defaults (see the
+<a href="cli_rundown.html#setup-check">setup check</a>).</p>
+
+<h2>Project components</h2>
+
+<div class="cards">
+  <div class="card">
+    <h3>Extraction Engine <span class="status written">Written</span></h3>
+    <p>Pulls candidate IoCs and document metadata out of a CTI report, then
+    verifies them — either with local Python heuristics or an
+    Ollama-hosted LLM.</p>
+    <p class="owner">Owner: Technical Lead (Ben King) · <a href="extraction-engine.html">Read more →</a></p>
+  </div>
+  <div class="card">
+    <h3>Database &amp; Schema <span class="status written">Written</span></h3>
+    <p>The seven-table SQLite repository (SQLAlchemy + Alembic) that the
+    ingest pipeline writes to and the dashboard reads, and the
+    STIX/MISP/OpenCTI design lineage behind it.</p>
+    <p class="owner">Owner: Project Lead (Tyler Passey) · <a href="database-schema.html">Read more →</a></p>
+  </div>
+  <div class="card">
+    <h3>Quality Checker <span class="status written">Written</span></h3>
+    <p>The four-layer pipeline — structural rejection, STIX conformance,
+    false-positive screening, dimension scoring — that turns raw candidates
+    into a scored, auditable indicator.</p>
+    <p class="owner">Owner: QA Lead (Ethan McLachlan) · <a href="quality-checker.html">Read more →</a></p>
+  </div>
+  <div class="card">
+    <h3>Dashboard / Web UI <span class="status written">Written</span></h3>
+    <p>A FastAPI app over the live database: browse and triage indicators,
+    reports and quality flags, upload and ingest reports, and edit the
+    per-machine configuration.</p>
+    <p class="owner">Owner: Project Lead (Tyler Passey) · <a href="dashboard-webui.html">Read more →</a></p>
+  </div>
+  <div class="card">
+    <h3>CLI <span class="status written">Written</span></h3>
+    <p>The <code>threatlens</code> command: runs one report through extraction
+    and verification and prints a summary or writes the full result as JSON,
+    without touching a database. Also covers <code>threatlens-calibrate</code>,
+    the single <code>threatlens.conf</code> and its setup check.</p>
+    <p class="owner"><a href="cli_rundown.html">Read more →</a></p>
+  </div>
+  <div class="card">
+    <h3>Pipeline Evaluation Reports</h3>
+    <p>Results from full runs over the 103-report CTI corpus: a run report
+    (timing, extraction funnel) and a comparison of LLM output across runs.</p>
+    <p class="owner"><a href="evaluation-reports.html">Read more →</a></p>
+  </div>
+</div>
+
+<h2>Deliberately out of scope</h2>
+
+<p>No threat actor / campaign / kill-chain graph modelling, no
+inter-indicator relationships, no intelligence sharing between
+organisations, no external enrichment (VirusTotal, AbuseIPDB). These are
+OpenCTI territory and are noted as future work rather than built.</p>
+
+<hr>
+
+<p><span class="badge">Status key</span> Pages marked <span class="status written">Written</span>
+are the full explanation for that component. Pages marked
+<span class="status stub">Stub</span> are placeholders — a short, accurate
+summary and pointers into the source — pending the full write-up.</p>
+
+<p>ThreatLens is free software, licensed under the
+<a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public
+License v3.0 or later</a> (AGPL-3.0-or-later). Copyright © 2026 Tyler Passey,
+Ben King and Ethan McLachlan.</p>
+
+</div>
+</body>
+</html>

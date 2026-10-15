@@ -23,11 +23,17 @@ def installed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path
 
 
+@pytest.mark.skipif(
+    not (paths.REPO_ROOT / "pyproject.toml").is_file(),
+    reason="testing an installed package (e.g. from the sdist), not a checkout",
+)
 def test_this_repo_is_a_checkout() -> None:
     assert paths.is_checkout()
 
 
 def test_checkout_layout_keeps_the_repo_folders(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(paths, "is_checkout", lambda: True)
+    monkeypatch.delenv("THREATLENS_HOME", raising=False)
     monkeypatch.delenv("THREATLENS_CONF", raising=False)
     monkeypatch.setattr(conf, "load_config", lambda path=None: conf.ThreatLensConfig())
     assert paths.config_file() == paths.REPO_ROOT / "threatlens.conf"
@@ -86,6 +92,8 @@ def test_stored_paths_are_relative_inside_the_data_folder(installed: Path) -> No
 
 
 def test_checkout_rows_still_resolve(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(paths, "is_checkout", lambda: True)
+    monkeypatch.delenv("THREATLENS_HOME", raising=False)
     monkeypatch.setattr(conf, "load_config", lambda path=None: conf.ThreatLensConfig())
     stored = "docs/database/CTI/abc.pdf"
     assert paths.resolve_stored(stored) == paths.REPO_ROOT / stored
